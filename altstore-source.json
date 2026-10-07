@@ -18,7 +18,17 @@
       "tintColor": "44E2B0",
       "category": "healthcare-fitness",
       "screenshotURLs": [],
-      "versions": [],
+      "versions": [
+        {
+          "version": "12.0.1",
+          "buildVersion": "436",
+          "date": "2026-10-07",
+          "localizedDescription": "WhoopRaw 12.0.1. See the release notes for what changed.",
+          "downloadURL": "https://github.com/Justin25313/whoopraw/releases/download/v12.0.1/NOOP-ios-unsigned-v12.0.1.ipa",
+          "size": 22349447,
+          "minOSVersion": "17.0"
+        }
+      ],
       "appPermissions": {
         "entitlements": [
           "com.apple.developer.healthkit",
@@ -33,7 +43,13 @@
           "NSMotionUsageDescription": "NOOP reads your iPhone's step count for a walking or running workout to show steps in the activity summary. It stays on your device. Nothing leaves it."
         }
       },
-      "minOSVersion": "17.0"
+      "minOSVersion": "17.0",
+      "version": "12.0.1",
+      "buildVersion": "436",
+      "versionDate": "2026-10-07",
+      "versionDescription": "WhoopRaw 12.0.1. See the release notes for what changed.",
+      "downloadURL": "https://github.com/Justin25313/whoopraw/releases/download/v12.0.1/NOOP-ios-unsigned-v12.0.1.ipa",
+      "size": 22349447
     }
   ],
   "news": []
