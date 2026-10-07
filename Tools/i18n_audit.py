@@ -12,7 +12,7 @@ Two independent problems, both covered here:
    language's translation is missing from the String Catalog / strings.xml.
    Reported as MISSING_<LANG>.
 
-Target languages: de, es, fr, pt-PT (the focus set). English is the source
+Target languages: de (the focus set; WhoopRaw is German-first). English is the source
 language and is not checked for itself.
 
 Read-only. Prints a report; does not modify any file. Re-runnable, and the
@@ -33,7 +33,11 @@ from pathlib import Path
 from typing import Callable
 
 ROOT = Path(__file__).resolve().parent.parent
-LANGS = ["de", "es", "fr", "pt-PT"]
+# WhoopRaw: German is the only required translation. The other shipped locales fall back to English
+# for new strings, so their coverage is reported but no longer gated (see GATE_NON_FOCUS_COVERAGE).
+# Format-specifier mismatches stay a hard failure in every locale.
+LANGS = ["de"]
+GATE_NON_FOCUS_COVERAGE = False
 ANDROID_LOCALE_DIRS = {
     "de": "values-de",
     "es": "values-es",
@@ -1684,10 +1688,12 @@ def ci_check(base_ref: str) -> int:
     for target, missing in sorted(extra_apple_gaps.items()):
         seen_targets.add(target)
         allowed = allowance.get(target, 0)
-        if missing > allowed:
+        if missing > allowed and GATE_NON_FOCUS_COVERAGE:
             failed = True
             locale_failed = True
             print(f"FAIL {target}: missing={missing} exceeds the allowance of {allowed}")
+        elif missing > allowed:
+            print(f"  INFO {target}: missing={missing} (allowance {allowed}, not gated)")
         elif missing < allowed:
             improved.append(f"{target}: {allowed} -> {missing}")
     base_path = ROOT / "android/app/src/main/res/values/strings.xml"
@@ -1701,10 +1707,12 @@ def ci_check(base_ref: str) -> int:
         target = f"{locale_dir}/strings.xml"
         seen_targets.add(target)
         allowed = allowance.get(target, 0)
-        if missing > allowed:
+        if missing > allowed and GATE_NON_FOCUS_COVERAGE:
             failed = True
             locale_failed = True
             print(f"FAIL {target}: missing={missing} exceeds the allowance of {allowed}")
+        elif missing > allowed:
+            print(f"  INFO {target}: missing={missing} (allowance {allowed}, not gated)")
         elif missing < allowed:
             improved.append(f"{target}: {allowed} -> {missing}")
     # An allowance for a target that no longer exists (locale removed, catalog dropped) can never be
