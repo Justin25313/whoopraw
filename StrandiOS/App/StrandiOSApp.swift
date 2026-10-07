@@ -244,6 +244,9 @@ struct StrandiOSApp: App {
                 // fixed-geometry tiles/gauges stay legible at the largest accessibility sizes rather than
                 // clipping; the common Larger-Text range still scales fully.
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                // WhoopRaw: no scroll indicators anywhere. Set once at the root so every ScrollView / List
+                // below (and the sheets they present) inherits it through the environment.
+                .scrollIndicators(.hidden)
                 // `hr` is the value being written: this runs in willSet, when `live.heartRate` still holds the old one.
                 .onReceive(model.live.$heartRate) { hr in
                     // The gym banner's own cheap path: no presentation is built here, and a heart rate moves

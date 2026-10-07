@@ -1,3 +1,11 @@
+> **WhoopRaw** — personal, noncommercial working copy of [NOOP](https://github.com/ryanbr/noop)
+> (baseline: tag `noop-baseline-working`, NOOP v12.0.0). The original NOOP README follows below.
+> Licensed under PolyForm Noncommercial 1.0.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
+> Not affiliated with WHOOP, Inc.
+>
+> **iPhone install:** add `https://raw.githubusercontent.com/Justin25313/whoopraw/main/altstore-source.json`
+> as a source in SideStore / AltStore.
+
 <p align="center">
   <img src="docs/assets/logo-v3.png" alt="NOOP" width="72">
 </p>
