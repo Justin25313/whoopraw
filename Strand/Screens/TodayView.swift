@@ -1984,7 +1984,7 @@ struct TodayView: View {
                         .foregroundStyle(StrandPalette.metricCyan)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-                        Text("Start session")
+                        Text("Start live session")
                             .font(StrandFont.headline)
                             .foregroundStyle(StrandPalette.textPrimary)
                         Text("Silent strap coaching against today's Charge.")

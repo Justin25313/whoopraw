@@ -577,11 +577,12 @@ class HomeLocalizationTest(unittest.TestCase):
         self.assertNotIn("Erholungherz", joined)
         self.assertNotIn("Erholungqualität", joined)
         self.assertNotIn("Erholung- und Live-Herzfrequenz", joined)
+        # WhoopRaw glossary: the three scores use the WHOOP-style names in German.
         for key, expected in {
-            "Charge": "Energie",
-            "Effort": "Belastung",
-            "Rest": "Erholung",
-            "How Rest is calculated": "So wird Erholung berechnet",
+            "Charge": "Recovery",
+            "Effort": "Strain",
+            "Rest": "Schlaf",
+            "How Rest is calculated": "So wird der Schlaf-Score berechnet",
         }.items():
             self.assertEqual(expected, strings[key]["localizations"]["de"]["stringUnit"]["value"])
 

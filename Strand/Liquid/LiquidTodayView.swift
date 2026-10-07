@@ -671,7 +671,7 @@ struct LiquidTodayView: View {
                     .foregroundStyle(StrandPalette.metricCyan)
                 // Theme-aware session-start chrome (#1160 parity): NoopPanelSurface + normal text
                 // tokens — light ink on Dark, dark ink on Light. (Was pinned-dark + on-dark tokens.)
-                Text("Start session")
+                Text("Start live session")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textPrimary)
                 Text("BETA")

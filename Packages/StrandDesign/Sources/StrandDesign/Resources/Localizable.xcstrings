@@ -1822,7 +1822,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erholungskalender, %lld Tage, Durchschnitt %lld, niedrigster Wert %lld, höchster Wert %lld"
+            "value": "Recovery-Kalender, %lld Tage, Durchschnitt %lld, niedrigster Wert %lld, höchster Wert %lld"
           }
         },
         "en": {
@@ -1886,7 +1886,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erholungskalender, keine Daten"
+            "value": "Recovery-Kalender, keine Daten"
           }
         },
         "en": {
@@ -4109,7 +4109,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erholung — 30 Tage"
+            "value": "Recovery — 30 Tage"
           }
         },
         "es": {
@@ -4151,7 +4151,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rückforderung — vergangenes Jahr"
+            "value": "Recovery — vergangenes Jahr"
           }
         },
         "es": {
