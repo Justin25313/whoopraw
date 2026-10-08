@@ -34,9 +34,11 @@ public enum NoopMetrics {
     /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
     public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
     public static let todayMonitorMinHeight: CGFloat = 128
-    public static let todaySyncSpinnerScale: CGFloat = 0.5
     public static let deviceBandGlyphWidth: CGFloat = 44
     public static let deviceBandGlyphHeight: CGFloat = 44
+    /// Measured status-disc bounds in the supplied 1254-pixel outline image, normalized to its canvas.
+    public static let bandOutlineDotFraction: CGFloat = 142.0 / 1254.0
+    public static let bandOutlineDotOrigin = CGPoint(x: 943.0 / 1254.0, y: 421.0 / 1254.0)
     /// Slim scale indicator and optional real-series chart beneath a Key Metrics row.
     public static let keyMetricBarHeight: CGFloat = 3
     public static let keyMetricTrendHeight: CGFloat = 24

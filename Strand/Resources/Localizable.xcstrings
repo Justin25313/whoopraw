@@ -1,6 +1,30 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Band graphic": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Band graphic" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Bandgrafik" } }
+      }
+    },
+    "Realistic": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Realistic" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Realistisch" } }
+      }
+    },
+    "Outline": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Outline" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Kontur" } }
+      }
+    },
+    "Choose the battery image shown on Today.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Choose the battery image shown on Today." } },
+        "de": { "stringUnit": { "state": "translated", "value": "Wähle das Bild für die Akkuanzeige auf der Heute-Seite." } }
+      }
+    },
     "HEALTH\nMONITOR": {
       "localizations": {
         "en": {

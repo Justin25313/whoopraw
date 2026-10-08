@@ -2790,9 +2790,9 @@ extension LiquidTodayView {
 private struct LiquidBatteryButton: View {
     @EnvironmentObject var live: LiveState
     @EnvironmentObject var router: NavRouter
+    @AppStorage(BandGraphicStyle.storageKey) private var bandGraphicRaw = BandGraphicStyle.realistic.rawValue
 
-    /// Debounced by `debouncedSyncSignal` below, so a per-chunk `backfilling` gap cannot flash the
-    /// indicator back to the battery reading in the middle of one logical sync.
+    /// Debounced so a per-chunk backfill gap does not announce that a logical sync has finished.
     @State private var syncing = false
     #if DEBUG
     /// Driven only by the `--demo-sync` harness; ignored entirely when that flag is absent.
@@ -2854,6 +2854,7 @@ private struct LiquidBatteryButton: View {
     }
 
     private var bandAsset: String {
+        if BandGraphicStyle.resolve(bandGraphicRaw) == .outline { return "deviceBandOutline" }
         guard case .charge(let percent, _, _) = batteryDisplay else { return "deviceBandGreen" }
         if percent < 15 { return "deviceBandRed" }
         if percent < 35 { return "deviceBandAmber" }
@@ -2874,9 +2875,20 @@ private struct LiquidBatteryButton: View {
                 .renderingMode(.original)
                 .resizable()
                 .scaledToFit()
-                .saturation(bandSaturation)
+                .saturation(BandGraphicStyle.resolve(bandGraphicRaw) == .outline ? 0 : bandSaturation)
                 .frame(width: NoopMetrics.deviceBandGlyphWidth,
                        height: NoopMetrics.deviceBandGlyphHeight)
+                .overlay(alignment: .topLeading) {
+                    if BandGraphicStyle.resolve(bandGraphicRaw) == .outline {
+                        // Recolor only the supplied outline's status disc at its measured asset coordinates.
+                        Circle()
+                            .fill(batteryTint)
+                            .frame(width: NoopMetrics.deviceBandGlyphWidth * NoopMetrics.bandOutlineDotFraction,
+                                   height: NoopMetrics.deviceBandGlyphHeight * NoopMetrics.bandOutlineDotFraction)
+                            .offset(x: NoopMetrics.deviceBandGlyphWidth * NoopMetrics.bandOutlineDotOrigin.x,
+                                    y: NoopMetrics.deviceBandGlyphHeight * NoopMetrics.bandOutlineDotOrigin.y)
+                    }
+                }
         }
     }
 
@@ -2906,12 +2918,7 @@ private struct LiquidBatteryButton: View {
                     deviceGlyph
                         .accessibilityHidden(true)
                         .overlay(alignment: .bottomTrailing) {
-                            if syncing {
-                                ProgressView()
-                                    .tint(batteryTint)
-                                    .scaleEffect(NoopMetrics.todaySyncSpinnerScale)
-                                    .frame(width: NoopMetrics.space2, height: NoopMetrics.space2)
-                            } else if isCharging {
+                            if isCharging {
                                 Image(systemName: "bolt.fill")
                                     .font(StrandFont.overline)
                             }
