@@ -210133,6 +210133,14 @@
     "WhoopRaw": {
       "comment": "Application brand name; displayed unchanged in every language.",
       "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhoopRaw"
+          }
+        }
+      },
       "shouldTranslate": false
     },
     "Wim Hof": {
