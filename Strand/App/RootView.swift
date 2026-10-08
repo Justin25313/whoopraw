@@ -122,7 +122,7 @@ enum NavItem: String, CaseIterable, Identifiable, Hashable {
         case .today: return "circle.hexagongrid.fill"
         case .intelligence: return "brain.head.profile"
         case .insightsHub: return "wand.and.sparkles"
-        case .coach: return "sparkles"
+        case .coach: return "bubble.left.and.text.bubble.right.fill"
         case .live: return "waveform.path.ecg"
         case .breathe: return "lungs.fill"
         case .intervals: return "timer"

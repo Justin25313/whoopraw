@@ -16,6 +16,8 @@ import StrandDesign
 /// live on the parent either.
 struct WorkoutStartControl: View {
     var showsActiveIndicator = false
+    /// Quiet action row for Today's grouped My Day surface; other callers retain the primary button.
+    var compactRow = false
     @EnvironmentObject var model: AppModel
     @State private var showLiveWorkout = false
     @State private var showStartSport = false
@@ -27,6 +29,28 @@ struct WorkoutStartControl: View {
                     StrandHaptic.selection.play()
                     showLiveWorkout = true
                 }
+            } else if compactRow {
+                Button(action: openWorkout) {
+                    HStack(spacing: NoopMetrics.space3) {
+                        Image(systemName: model.activeWorkout == nil ? "figure.run" : "timer")
+                            .font(StrandFont.subhead)
+                            .foregroundStyle(StrandPalette.accent)
+                            .accessibilityHidden(true)
+                        Text(model.activeWorkout == nil ? String(localized: "Start workout") : String(localized: "View active workout"))
+                            .font(StrandFont.subhead)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                        Spacer(minLength: NoopMetrics.space2)
+                        Image(systemName: "chevron.right")
+                            .font(StrandFont.caption)
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(NoopMetrics.cardInnerPadding)
+                    .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(model.activeWorkout == nil ? "Start a workout" : "View the active workout")
             } else {
                 NoopButton(model.activeWorkout == nil ? "Start workout" : "View active workout",
                            systemImage: model.activeWorkout == nil ? "figure.run" : "timer",
@@ -34,8 +58,7 @@ struct WorkoutStartControl: View {
                            fullWidth: true) {
                     // No active session → pick a named sport first (#519), then the sheet's onStart begins it
                     // and opens the in-exercise view. Already active → jump straight back into the live view.
-                    if model.activeWorkout == nil { showStartSport = true }
-                    else { showLiveWorkout = true }
+                    openWorkout()
                 }
                 .accessibilityLabel(model.activeWorkout == nil ? "Start a workout" : "View the active workout")
             }
@@ -56,5 +79,10 @@ struct WorkoutStartControl: View {
                 showLiveWorkout = true
             }
         }
+    }
+
+    private func openWorkout() {
+        if model.activeWorkout == nil { showStartSport = true }
+        else { showLiveWorkout = true }
     }
 }

@@ -35,6 +35,9 @@ public enum NoopMetrics {
     public static let deviceBandGlyphWidth: CGFloat = 20
     public static let deviceBandGlyphHeight: CGFloat = 26
     public static let deviceBandStrokeWidth: CGFloat = 1.4
+    /// Slim scale indicator and optional real-series chart beneath a Key Metrics row.
+    public static let keyMetricBarHeight: CGFloat = 3
+    public static let keyMetricTrendHeight: CGFloat = 24
     /// Expanded width of the compact charge-to-sync status capsule.
     public static let syncIndicatorExpandedWidth: CGFloat = 108
     /// Optical space between the sync ring and its transient label.

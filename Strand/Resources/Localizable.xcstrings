@@ -1,6 +1,134 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "My Day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Day"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mein Tag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma journée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mia giornata"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mój dzień"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O meu dia"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мой день"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的一天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的一天"
+          }
+        }
+      }
+    },
+    "Dismiss today's summary": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss today's summary"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heutige Zusammenfassung ausblenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar el resumen de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer le résumé du jour"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi il riepilogo di oggi"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukryj dzisiejsze podsumowanie"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar o resumo de hoje"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыть сегодняшнюю сводку"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏今日总结"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隱藏今日摘要"
+          }
+        }
+      }
+    },
     "Move, relative to tonight": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Move, relative to tonight"}}, "de": {"stringUnit": {"state": "translated", "value": "Bewegung, relativ zu dieser Nacht"}}, "es": {"stringUnit": {"state": "translated", "value": "Movimiento, en relación con esta noche"}}, "fr": {"stringUnit": {"state": "translated", "value": "Mouvement, par rapport à cette nuit"}}, "it": {"stringUnit": {"state": "translated", "value": "Movimento, rispetto a questa notte"}}, "pl": {"stringUnit": {"state": "translated", "value": "Ruch, w odniesieniu do tej nocy"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Movimento, em relação a esta noite"}}, "ru": {"stringUnit": {"state": "translated", "value": "Движение, относительно этой ночи"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "活动，相对于今晚"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "活動，相對於今晚"}}}},
     "Route and GPS distance, without the heart-rate and calorie summary": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Route and GPS distance, without the heart-rate and calorie summary"}}, "de": {"stringUnit": {"state": "translated", "value": "Route und GPS-Distanz, ohne die Herzfrequenz- und Kalorienübersicht"}}, "es": {"stringUnit": {"state": "translated", "value": "Ruta y distancia GPS, sin el resumen de frecuencia cardiaca y calorías"}}, "fr": {"stringUnit": {"state": "translated", "value": "Itinéraire et distance GPS, sans le récapitulatif de fréquence cardiaque et de calories"}}, "it": {"stringUnit": {"state": "translated", "value": "Percorso e distanza GPS, senza il riepilogo di frequenza cardiaca e calorie"}}, "pl": {"stringUnit": {"state": "translated", "value": "Trasa i dystans GPS, bez podsumowania tętna i kalorii"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Rota e distância GPS, sem o resumo de frequência cardíaca e calorias"}}, "ru": {"stringUnit": {"state": "translated", "value": "Маршрут и GPS-дистанция, без сводки пульса и калорий"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "路线和 GPS 距离，不含心率和卡路里摘要"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "路線和 GPS 距離，不含心率和卡路里摘要"}}}},
     "Export Workout Route": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Export Workout Route"}}, "de": {"stringUnit": {"state": "translated", "value": "Trainingsroute exportieren"}}, "es": {"stringUnit": {"state": "translated", "value": "Exportar ruta del entrenamiento"}}, "fr": {"stringUnit": {"state": "translated", "value": "Exporter l’itinéraire de la séance"}}, "it": {"stringUnit": {"state": "translated", "value": "Esporta il percorso dell’allenamento"}}, "pl": {"stringUnit": {"state": "translated", "value": "Eksportuj trasę treningu"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Exportar rota do treino"}}, "ru": {"stringUnit": {"state": "translated", "value": "Экспортировать маршрут тренировки"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "导出运动路线"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "匯出運動路線"}}}},

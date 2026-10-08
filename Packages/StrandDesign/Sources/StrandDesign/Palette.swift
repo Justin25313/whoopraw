@@ -135,9 +135,8 @@ public enum StrandPalette {
     public static var accentMuted: Color { accentChoice.accentMuted }
     /// Focus ring color — the same accent, on both schemes.
     public static var focusRing: Color { accentChoice.focusRing }
-    /// Quiet chrome tint and rim for the glass Today selector; follows the user's accent choice.
-    public static var todayDayGlassTint: Color { accent.opacity(0.10) }
-    public static var todayDayGlassRim: Color { accent.opacity(0.30) }
+    /// Neutral rim for the glass Today selector, independent of the user's accent choice.
+    public static var todayDayGlassRim: Color { textSecondary.opacity(0.18) }
     /// Opacity for dimmed/disabled sections (shared so screens don't invent their own value).
     public static let disabledOpacity: Double = 0.45
     /// Liquid-scene activity tint shared by heart-rate feedback and transient sync chrome.

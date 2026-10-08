@@ -97,6 +97,8 @@ struct LiquidTodayView: View {
     @State private var showCoachLauncher = false
     @State private var showSettings = false
     @State private var synthesisExpanded = false
+    // Dismissal is local to today's logical day (04:00 rollover), and survives app restarts.
+    @AppStorage("today.synthesisDismissedDay") private var synthesisDismissedDay = ""
     @State private var showLiveSession = false
 
     /// Live Sessions (silent guardian) beta gate — the SAME key the Settings toggle writes. Default ON
@@ -118,7 +120,10 @@ struct LiquidTodayView: View {
     /// loader banks a day-keyed 30-day superset; render filters down, so a window change applies instantly.
     @AppStorage("today.keyMetricsWindowDays") private var keyMetricsWindowDays = 14
     @State private var kSparks: [String: [(String, Double)]] = [:]
-    private var enabledKeyMetrics: [KeyMetric] { KeyMetricPrefs.decodeEnabled(keyMetricsRaw) }
+    // Strain already has a fixed score and detail route at the top of compact Today.
+    private var enabledKeyMetrics: [KeyMetric] {
+        KeyMetricPrefs.decodeEnabled(keyMetricsRaw).filter { $0 != .effort }
+    }
 
     /// #1001: TODAY's in-progress Effort, scored live in `load()` over the same window this view already
     /// resolves for its other reads. nil for a navigated past day, and nil when the scorer has too few
@@ -344,6 +349,10 @@ struct LiquidTodayView: View {
                 VStack(alignment: .leading, spacing: NoopMetrics.space3) {
                     scene
                     heroCard
+                    if sectionOrder.contains(.synthesis),
+                       selectedDayOffset != 0 || synthesisDismissedDay != Repository.logicalDayKey(Date()) {
+                        synthesisSection
+                    }
                     if chargeLegacyRRGap { ChargeLegacyRRGapNote() }
                     // The strain/illness early-warning banner, dropped in the liquid Home rewrite. Liquid is
                     // the DEFAULT Today on both platforms (RootTabView.swift's liquidTodayEnabled = true,
@@ -358,14 +367,16 @@ struct LiquidTodayView: View {
                     // here as the SAME leaf the classic TodayView renders (and Android's WorkoutInProgressCard),
                     // pinned above the reorderable block so an active manual workout is immediately visible
                     // and opens the existing workout flow. Today also offers Start when no workout is active.
-                    ActiveWorkoutIndicatorSection(showStart: selectedDayOffset == 0)
-                    // The score overview is pinned below the name. Remaining sections retain their saved
+                    if selectedDayOffset == 0 {
+                        myDaySection
+                    } else {
+                        ActiveWorkoutIndicatorSection()
+                    }
+                    // The score overview is pinned below the name. Summary and actions follow the scores. Remaining sections retain their saved
                     // order and visibility; the customization tile opens their existing unified editor.
-                    ForEach(sectionOrder.filter { $0 != .hero }) { section in
+                    ForEach(sectionOrder.filter { ![.hero, .synthesis, .liveSession].contains($0) }) { section in
                         switch section {
-                        case .hero: EmptyView()
-                        case .liveSession: if liveSessionsBeta { liveSessionStartRow }
-                        case .synthesis: synthesisSection
+                        case .hero, .liveSession, .synthesis: EmptyView()
                         case .keyMetrics:
                             keyMetricsSection
                             customizeTodayTile
@@ -474,6 +485,7 @@ struct LiquidTodayView: View {
             TodayCustomizationSheet(
                 initialDestination: destination,
                 pinsScoreOverview: true,
+                omittedKeyMetrics: [.effort],
                 sectionOrderRaw: $sectionOrderRaw,
                 hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw,
@@ -661,14 +673,32 @@ struct LiquidTodayView: View {
         .buttonStyle(LiquidPressStyle())
     }
 
-    /// One-tap Live Session start (silent guardian, beta) — sits directly under the hero scores, the
-    /// Charge its band is gated on. Same translucent chrome as the hero card so it reads as part of the
-    /// sky scene, quiet by design.
+    /// Today's actions share one quiet surface, below the daily synthesis and above the metric rows.
+    private var myDaySection: some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.space3) {
+            Text("My Day")
+                .font(StrandFont.headline)
+                .foregroundStyle(StrandPalette.textPrimary)
+            VStack(spacing: 0) {
+                WorkoutStartControl(showsActiveIndicator: true, compactRow: true)
+                if liveSessionsBeta && sectionOrder.contains(.liveSession) {
+                    Divider().overlay(StrandPalette.hairline)
+                        .padding(.horizontal, NoopMetrics.cardInnerPadding)
+                    liveSessionStartRow
+                }
+            }
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius,
+                                         surfaceOpacity: cardOpacity))
+        }
+        .padding(.top, NoopMetrics.space3)
+    }
+
+    /// One-tap Live Session start (silent guardian, beta) inside the My Day actions surface.
     private var liveSessionStartRow: some View {
         Button { showLiveSession = true } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: NoopMetrics.space3) {
                 Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.metricCyan)
                 // Theme-aware session-start chrome (#1160 parity): NoopPanelSurface + normal text
                 // tokens — light ink on Dark, dark ink on Light. (Was pinned-dark + on-dark tokens.)
@@ -684,13 +714,13 @@ struct LiquidTodayView: View {
                             StrandPalette.hairline,
                             lineWidth: NoopMetrics.hairlineWidth
                         )))
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+                Spacer(minLength: NoopMetrics.space2)
+                Image(systemName: "chevron.right").font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(NoopPanelSurface(cornerRadius: 18, surfaceOpacity: cardOpacity))
+            .padding(NoopMetrics.cardInnerPadding)
+            .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget)
+            .contentShape(Rectangle())
         }
         .buttonStyle(LiquidPressStyle())
         .accessibilityLabel("Start a live session. Beta. Silent strap coaching against today's Charge.")
@@ -729,8 +759,6 @@ struct LiquidTodayView: View {
             }
         }
         .padding(.vertical, NoopMetrics.space4)
-        .padding(.horizontal, NoopMetrics.space3)
-        .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius, elevated: true, surfaceOpacity: cardOpacity))
     }
 
     // MARK: - Heart rate
@@ -1156,27 +1184,35 @@ struct LiquidTodayView: View {
     }
 
     private var synthesisSection: some View {
-        VStack(spacing: 8) {
-            Text(greeting)
-                .font(StrandFont.headline)
-                .foregroundStyle(StrandPalette.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, NoopMetrics.spaceHalf)
-                .padding(.top, NoopMetrics.space1)
-
-            Button { withAnimation(.easeInOut(duration: 0.2)) { synthesisExpanded.toggle() } } label: {
-                card {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("SYNTHESIS").font(StrandFont.overline).tracking(1.6)
-                                .foregroundStyle(StrandPalette.textSecondary)
-                            Spacer()
-                            Text(synthesisExpanded
-                                 ? String(localized: "hide")
-                                 : String(localized: "show"))
+        card {
+            VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+                HStack {
+                    Text(greeting)
+                        .font(StrandFont.headline)
+                        .foregroundStyle(StrandPalette.textPrimary)
+                    Spacer()
+                    if selectedDayOffset == 0 {
+                        Button {
+                            withAnimation(StrandMotion.interactive) {
+                                synthesisDismissedDay = Repository.logicalDayKey(Date())
+                                synthesisExpanded = false
+                            }
+                        } label: {
+                            Image(systemName: "xmark")
                                 .font(StrandFont.caption)
-                                .foregroundStyle(StrandPalette.textTertiary)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                                .frame(width: NoopButtonMetrics.minHitTarget,
+                                       height: NoopButtonMetrics.minHitTarget)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Dismiss today's summary")
+                    }
+                }
+                Button {
+                    withAnimation(StrandMotion.interactive) { synthesisExpanded.toggle() }
+                } label: {
+                    VStack(alignment: .leading, spacing: NoopMetrics.space2) {
                         // While the baseline calibrates, the honest "N of 4 nights" progress replaces the
                         // readiness one-liner here, matching the classic Today explanation.
                         Text(chargeDisplay.calibrationDetail ?? synthLine)
@@ -1219,11 +1255,14 @@ struct LiquidTodayView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
+                .accessibilityHint(Text(synthesisExpanded ? String(localized: "hide") : String(localized: "show")))
             }
-            .buttonStyle(LiquidPressStyle())
         }
     }
+
 
     // MARK: - Recovery vitals
 
@@ -1340,20 +1379,18 @@ struct LiquidTodayView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Edit Key Metrics")
             }
-            // #430 parity: the grid honours the Key-Metrics editor (selection + order, all ten metrics)
-            // instead of a hard-coded six — the bespoke Sleep-hours ktile gives way to the shared REST
-            // score tile, aligning the liquid grid with the classic macOS grid and Android.
-            LazyVGrid(
-                columns: Array(
-                    repeating: GridItem(.flexible(), spacing: NoopMetrics.gap),
-                    count: 2
-                ),
-                spacing: NoopMetrics.gap
-            ) {
+            // The saved metric order drives one grouped list; Strain is already in the pinned scores.
+            VStack(spacing: 0) {
                 ForEach(enabledKeyMetrics) { metric in
-                    ktileFor(metric, hrv: hrv, rhr: rhr)
+                    keyMetricRowFor(metric, hrv: hrv, rhr: rhr)
+                    if metric != enabledKeyMetrics.last {
+                        Divider().overlay(StrandPalette.hairline)
+                            .padding(.horizontal, NoopMetrics.cardInnerPadding)
+                    }
                 }
             }
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius,
+                                         surfaceOpacity: cardOpacity))
             NavigationLink(value: TabRoute.metricExplorer) {
                 LiquidFullWidthNavigationAction("Show all metrics")
             }
@@ -1361,32 +1398,29 @@ struct LiquidTodayView: View {
         }
     }
 
-    /// One editor-selected Key-Metric tile: the metric's value/tint/fill exactly as the old hard-coded
-    /// tiles read them (Android's descriptor map is the twin), plus the metric-catalog `key` that names
-    /// both its 14-day spark series and its tap-through detail. Weight has no liquid value source yet —
-    /// its tile reads "—" but still taps through to the weight trend detail (which has its own series).
+    /// One editor-selected metric row, preserving the shared value, source, units and detail route.
     @ViewBuilder
-    private func ktileFor(_ metric: KeyMetric, hrv: Double?, rhr: Double?) -> some View {
+    private func keyMetricRowFor(_ metric: KeyMetric, hrv: Double?, rhr: Double?) -> some View {
         switch metric {
         case .charge:
             // Reads the SAME resolved Charge the hero draws, not `displayDay?.recovery` raw — the tile and the
             // hero are the same number, so a carry that reached only one of them would put two answers for
-            // Charge on one screen. (#543: one prior row feeds every recovery-derived read-out.) Strain below
-            // stays raw, matching the Effort hero, which correctly does not carry.
-            ktile(String(localized: "Recovery"), icon: keyMetricIcon(metric), intText(chargeDisplay.pct), "%", StrandPalette.chargeColor, frac(chargeDisplay.pct), key: HeroRingMetric.charge)
+            // Charge on one screen. (#543: one prior row feeds every recovery-derived read-out.) Strain
+            // in the hero stays raw and correctly does not carry.
+            keyMetricRow(String(localized: "Recovery"), intText(chargeDisplay.pct), "%", StrandPalette.chargeColor, frac(chargeDisplay.pct), key: HeroRingMetric.charge)
         case .effort:
             // #492: Effort is a load index (0–100 NOOP / 0–21 WHOOP), NOT a percentage, and the unit was
             // wrong on either axis. Fixed on Android and in `TodayView` at the time; THIS view kept the old
             // form, so the tile also ignored the scale toggle — the hero ring above it read ~8 on the WHOOP
             // axis while this read 38. `effortText` is the same shared formatter the ring and the workout
             // rows use, so all three now agree by construction.
-            ktile(String(localized: "Strain"), icon: keyMetricIcon(metric), effortText(effortStrain(displayDay)), "", StrandPalette.effortColor, frac(effortStrain(displayDay)), key: HeroRingMetric.effort)
+            keyMetricRow(String(localized: "Strain"), effortText(effortStrain(displayDay)), "", StrandPalette.effortColor, frac(effortStrain(displayDay)), key: HeroRingMetric.effort)
         case .rest:
-            ktile(String(localized: "Rest"), icon: keyMetricIcon(metric), intText(restScore), "%", StrandPalette.restColor, frac(restScore), key: HeroRingMetric.rest)
+            keyMetricRow(String(localized: "Rest"), intText(restScore), "%", StrandPalette.restColor, frac(restScore), key: HeroRingMetric.rest)
         case .hrv:
-            ktile("HRV", icon: keyMetricIcon(metric), intText(hrv), "ms", StrandPalette.metricCyan, fracOver(hrv, 120), key: "hrv")
+            keyMetricRow("HRV", intText(hrv), "ms", StrandPalette.metricCyan, fracOver(hrv, 120), key: "hrv")
         case .restingHr:
-            ktile(String(localized: "Rest HR"), icon: keyMetricIcon(metric), intText(rhr), "bpm", StrandPalette.metricRose, fracOver(rhr, 100), key: "rhr")
+            keyMetricRow(String(localized: "Rest HR"), intText(rhr), "bpm", StrandPalette.metricRose, fracOver(rhr, 100), key: "rhr")
         case .bloodOxygen:
             // Queue 11a: the Liquid tile used to read `spo2Pct` only, with no candidate fallback at all
             // (unlike the classic `TodayView`/`VitalSignsSummary`), so an Oura-only or BLE-only WHOOP
@@ -1400,21 +1434,21 @@ struct LiquidTodayView: View {
                 ? spo2CandidateByDay[cachedDisplayDay?.day ?? selectedDayKey]
                 : nil
             let spo2 = spo2Real ?? spo2CandidateValue
-            ktile(String(localized: "Blood Oxygen"), icon: keyMetricIcon(metric), intText(spo2), "%", StrandPalette.metricCyan, fracOver(spo2, 100), key: spo2CandidateValue != nil ? "spo2_candidate" : "spo2",
+            keyMetricRow(String(localized: "Blood Oxygen"), intText(spo2), "%", StrandPalette.metricCyan, fracOver(spo2, 100), key: spo2CandidateValue != nil ? "spo2_candidate" : "spo2",
                   caption: spo2CandidateValue != nil ? String(localized: "strap estimate (unverified)") : nil)
         case .respiratory:
             let resp = displayDay?.respRateBpm ?? vitalsDay?.respRateBpm ?? respDay?.respRateBpm
-            ktile(String(localized: "Respiratory"), icon: keyMetricIcon(metric), resp.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "—", "rpm", StrandPalette.accent, fracOver(resp, 24), key: "resp_rate")
+            keyMetricRow(String(localized: "Respiratory"), resp.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "—", "rpm", StrandPalette.accent, fracOver(resp, 24), key: "resp_rate")
         case .steps:
-            ktile(String(localized: "Steps"), icon: keyMetricIcon(metric), stepsText, "", StrandPalette.chargeColor,
+            keyMetricRow(String(localized: "Steps"), stepsText, "", StrandPalette.chargeColor,
                   fracOver(stepCount, 10000), key: stepsDetailKey, detailMetric: stepsDetailMetric)
         case .weight:
             let (val, cap) = weightTile(weightKg)
-            ktile(String(localized: "Weight"), icon: keyMetricIcon(metric), val, "", StrandPalette.metricAmber, nil, key: "weight", caption: cap)
+            keyMetricRow(String(localized: "Weight"), val, "", StrandPalette.metricAmber, nil, key: "weight", caption: cap)
         case .calories:
             // #616: imported-first value (imported ?: activeKcalEst) + route the tap to the matching
             // detail source, so the number, its sparkline and the chart it opens all agree.
-            ktile(String(localized: "Calories"), icon: keyMetricIcon(metric), intText(caloriesCount), "kcal", StrandPalette.metricAmber,
+            keyMetricRow(String(localized: "Calories"), intText(caloriesCount), "kcal", StrandPalette.metricAmber,
                   fracOver(caloriesCount, 800), key: "energy_kcal", detailMetric: caloriesDetailMetric)
         case .skinTemp:
             // Added 2026-08-24 (queue 11c follow-up): first Key Metrics appearance for Skin Temp — was
@@ -1428,81 +1462,53 @@ struct LiquidTodayView: View {
                                                        fahrenheit: temperatureUnit == .fahrenheit)
             // The card's own unit is deliberately empty — the value carries "°C"/"Δ°F" itself, same as
             // the classic TodayView Skin Temp card.
-            ktile(String(localized: "Skin Temp"), icon: keyMetricIcon(metric), skinText, "", StrandPalette.metricAmber, nil, key: "skin_temp")
+            keyMetricRow(String(localized: "Skin Temp"), skinText, "", StrandPalette.metricAmber, nil, key: "skin_temp")
         }
     }
 
-    private func keyMetricIcon(_ metric: KeyMetric) -> String {
-        switch metric {
-        case .charge: return "heart.fill"
-        case .effort: return "bolt.fill"
-        case .rest: return "moon.stars.fill"
-        case .hrv: return "waveform.path.ecg"
-        case .restingHr: return "heart.circle.fill"
-        case .bloodOxygen: return "drop.fill"
-        case .respiratory: return "lungs.fill"
-        case .steps: return "figure.walk"
-        case .weight: return "scalemass.fill"
-        case .calories: return "flame.fill"
-        case .skinTemp: return "thermometer.medium"
-        }
-    }
-
-    private func ktile(_ label: String, icon: String, _ value: String, _ unit: String, _ tint: Color, _ frac: Double?,
+    private func keyMetricRow(_ label: String, _ value: String, _ unit: String, _ tint: Color, _ frac: Double?,
                        key: String? = nil, detailMetric: MetricDescriptor? = nil, caption: String? = nil) -> some View {
         let displayValue = Self.tileDisplayValue(value, unit: unit)
-        let tile = VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(tint.opacity(0.72))
-                    .frame(width: 14)
-                Text(label.uppercased())
-                    .font(StrandFont.overlineScaled(10))
-                    .tracking(1.0)
-                    .foregroundStyle(StrandPalette.textTertiary)
+        let tile = VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
+                Text(label)
+                    .font(StrandFont.body)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                Spacer(minLength: NoopMetrics.space2)
+                Text(verbatim: displayValue)
+                    .font(StrandFont.headline)
+                    .monospacedDigit()
+                    .foregroundStyle(StrandPalette.textPrimary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+                    .minimumScaleFactor(NoopMetrics.syncIndicatorMinimumLabelScale)
             }
-            Text(verbatim: displayValue)
-                .font(StrandFont.number(24))
-                .foregroundStyle(StrandPalette.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-            // Optional sub-value caveat (queue 11a): only ever set for an unvalidated candidate fallback
-            // (e.g. the SpO₂ strap estimate), so every other `ktile` call site — no `caption` argument —
-            // renders byte-identical to before this parameter existed.
             if let caption {
                 Text(caption)
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            LiquidTube(frac: frac ?? 0, tint: tint, height: 9, animated: false,
-                       showsHighlight: false, usesCleanFill: true)
-            // #430 parity: DETAILED tiles grow the trend graph under the bar, tinted to the metric and
-            // windowed to the editor's 1-week / 2-week / 1-month choice (the Android twin). A metric with no
-            // windowed series keeps a clear placeholder of the same height so every tile in a detailed row
-            // stays equal-height with its bars aligned.
+            // A scale bar is a proportion, not a time-series trend; missing readings draw no fill.
+            if let frac {
+                LiquidTube(frac: frac, tint: tint, height: NoopMetrics.keyMetricBarHeight, animated: false,
+                           showsHighlight: false, usesCleanFill: true)
+                    .accessibilityHidden(true)
+            }
+            // Detailed rows show an actual saved series on the user's selected time window.
             if keyMetricsDetailed {
                 let spark = key.map { windowedSpark($0) } ?? []
                 if spark.count >= 2 {
                     Sparkline(values: spark,
                               gradient: Gradient(colors: [tint.opacity(0.5), tint]))
-                        .frame(height: 22)
-                        .padding(.top, 6)
+                        .frame(height: NoopMetrics.keyMetricTrendHeight)
                         .accessibilityHidden(true)
-                } else {
-                    Color.clear.frame(height: 22).padding(.top, 6)
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 14)
+        .padding(.horizontal, NoopMetrics.cardInnerPadding)
+        .padding(.vertical, NoopMetrics.space3)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: keyMetricsDetailed ? 154 : 116, alignment: .topLeading)
-        .background(NoopPanelSurface(tint: tint, cornerRadius: 18, surfaceOpacity: cardOpacity))
+        .contentShape(Rectangle())
         // #430 parity: tap -> the metric's trend detail (the same Explore dossier its MetricRow pushes,
         // closure-based NavigationLink per #38). A metric with no catalog entry stays inert.
         return Group {
