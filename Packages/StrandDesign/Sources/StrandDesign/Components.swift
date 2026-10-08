@@ -31,6 +31,8 @@ public enum NoopMetrics {
     public static let todayHeaderSideWidth: CGFloat = 72
     public static let todayDaySelectorMaxWidth: CGFloat = 184
     public static let todayScoreDiameter: CGFloat = 80
+    /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
+    public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
     public static let todaySyncSpinnerScale: CGFloat = 0.5
     public static let deviceBandGlyphWidth: CGFloat = 20
     public static let deviceBandGlyphHeight: CGFloat = 26

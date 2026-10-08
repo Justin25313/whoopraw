@@ -120,9 +120,10 @@ struct LiquidTodayView: View {
     /// loader banks a day-keyed 30-day superset; render filters down, so a window change applies instantly.
     @AppStorage("today.keyMetricsWindowDays") private var keyMetricsWindowDays = 14
     @State private var kSparks: [String: [(String, Double)]] = [:]
-    // Strain already has a fixed score and detail route at the top of compact Today.
+    // All three scores already have a fixed ring and detail route at the top of compact Today.
+    private let pinnedKeyMetrics: Set<KeyMetric> = [.charge, .effort, .rest]
     private var enabledKeyMetrics: [KeyMetric] {
-        KeyMetricPrefs.decodeEnabled(keyMetricsRaw).filter { $0 != .effort }
+        KeyMetricPrefs.decodeEnabled(keyMetricsRaw).filter { !pinnedKeyMetrics.contains($0) }
     }
 
     /// #1001: TODAY's in-progress Effort, scored live in `load()` over the same window this view already
@@ -485,7 +486,7 @@ struct LiquidTodayView: View {
             TodayCustomizationSheet(
                 initialDestination: destination,
                 pinsScoreOverview: true,
-                omittedKeyMetrics: [.effort],
+                omittedKeyMetrics: pinnedKeyMetrics,
                 sectionOrderRaw: $sectionOrderRaw,
                 hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw,
@@ -667,7 +668,7 @@ struct LiquidTodayView: View {
             .foregroundStyle(StrandPalette.textPrimary)
             .padding(NoopMetrics.cardInnerPadding)
             .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget)
-            .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius,
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.todayCardRadius,
                                          surfaceOpacity: cardOpacity))
         }
         .buttonStyle(LiquidPressStyle())
@@ -687,7 +688,7 @@ struct LiquidTodayView: View {
                     liveSessionStartRow
                 }
             }
-            .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius,
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.todayCardRadius,
                                          surfaceOpacity: cardOpacity))
         }
         .padding(.top, NoopMetrics.space3)
@@ -729,14 +730,14 @@ struct LiquidTodayView: View {
     private var heroCard: some View {
         VStack(alignment: .trailing, spacing: NoopMetrics.space2) {
             HStack(alignment: .top, spacing: NoopMetrics.space1) {
-                HeroScoreCell(label: String(localized: "Rest"), score: restScore, tint: StrandPalette.restColor,
+                HeroScoreCell(label: String(localized: "Sleep"), score: restScore, tint: StrandPalette.restColor,
                               animated: dataLoaded, onGuide: { guideSection = .rest },
                               detailRoute: .metric(HeroRingMetric.rest))
                 // #543 carry: an unscored today shows the last scored night's REAL Charge (labelled as prior by
                 // the state pill) rather than an empty vessel, matching the classic Today, the widget/watch/Live
                 // Activity (`Repository.widgetAnchor`) and Android. Effort deliberately does NOT carry — it is
                 // today's own accumulation, so yesterday's number would be a false statement, not a stale one.
-                HeroScoreCell(label: String(localized: "Charge"), score: chargeDisplay.pct,
+                HeroScoreCell(label: String(localized: "Recovery"), score: chargeDisplay.pct,
                               tint: chargeDisplay.pct.map { StrandPalette.recoveryColor($0) } ?? StrandPalette.chargeColor,
                               animated: dataLoaded, onGuide: { guideSection = .charge },
                               detailRoute: .metric(HeroRingMetric.charge))
@@ -744,7 +745,7 @@ struct LiquidTodayView: View {
                 // Show the value on the chosen scale (0–100 or WHOOP 0–21) with the matching vessel max, and
                 // one decimal on the compressed 0–21 axis to match the app-wide `effortDisplay` convention
                 // (12.6, not a rounded "13"); the 0–100 hero stays a whole number as before.
-                HeroScoreCell(label: String(localized: "Effort"),
+                HeroScoreCell(label: String(localized: "Strain"),
                               score: effortStrain(displayDay).map { UnitFormatter.effortValue($0, scale: effortScale) },
                               tint: StrandPalette.effortColor, animated: dataLoaded,
                               onGuide: { guideSection = .effort },
@@ -1170,7 +1171,7 @@ struct LiquidTodayView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
-        .background(NoopPanelSurface(tint: tint, cornerRadius: 20, surfaceOpacity: cardOpacity))
+        .background(NoopPanelSurface(tint: tint, cornerRadius: NoopMetrics.todayCardRadius, surfaceOpacity: cardOpacity))
     }
 
     // MARK: - Synthesis (greeting + explanation)
@@ -1184,31 +1185,12 @@ struct LiquidTodayView: View {
     }
 
     private var synthesisSection: some View {
-        card {
+        card(verticalPadding: NoopMetrics.space3) {
             VStack(alignment: .leading, spacing: NoopMetrics.space2) {
-                HStack {
-                    Text(greeting)
-                        .font(StrandFont.headline)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    Spacer()
-                    if selectedDayOffset == 0 {
-                        Button {
-                            withAnimation(StrandMotion.interactive) {
-                                synthesisDismissedDay = Repository.logicalDayKey(Date())
-                                synthesisExpanded = false
-                            }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(StrandFont.caption)
-                                .foregroundStyle(StrandPalette.textSecondary)
-                                .frame(width: NoopButtonMetrics.minHitTarget,
-                                       height: NoopButtonMetrics.minHitTarget)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Dismiss today's summary")
-                    }
-                }
+                Text(greeting)
+                    .font(StrandFont.headline)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                    .padding(.trailing, selectedDayOffset == 0 ? NoopMetrics.compactControlSize : 0)
                 Button {
                     withAnimation(StrandMotion.interactive) { synthesisExpanded.toggle() }
                 } label: {
@@ -1259,6 +1241,26 @@ struct LiquidTodayView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint(Text(synthesisExpanded ? String(localized: "hide") : String(localized: "show")))
+            }
+        }
+        // Preserve the close button's touch target without making the greeting row 44 points tall.
+        .overlay(alignment: .topTrailing) {
+            if selectedDayOffset == 0 {
+                Button {
+                    withAnimation(StrandMotion.interactive) {
+                        synthesisDismissedDay = Repository.logicalDayKey(Date())
+                        synthesisExpanded = false
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(StrandFont.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                        .frame(width: NoopButtonMetrics.minHitTarget,
+                               height: NoopButtonMetrics.minHitTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss today's summary")
             }
         }
     }
@@ -1379,7 +1381,7 @@ struct LiquidTodayView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Edit Key Metrics")
             }
-            // The saved metric order drives one grouped list; Strain is already in the pinned scores.
+            // The saved metric order drives one grouped list; the three pinned scores stay above.
             VStack(spacing: 0) {
                 ForEach(enabledKeyMetrics) { metric in
                     keyMetricRowFor(metric, hrv: hrv, rhr: rhr)
@@ -1389,7 +1391,7 @@ struct LiquidTodayView: View {
                     }
                 }
             }
-            .background(NoopPanelSurface(cornerRadius: NoopMetrics.cardRadius,
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.todayCardRadius,
                                          surfaceOpacity: cardOpacity))
             NavigationLink(value: TabRoute.metricExplorer) {
                 LiquidFullWidthNavigationAction("Show all metrics")
@@ -1604,11 +1606,13 @@ struct LiquidTodayView: View {
         .padding(.top, 4)
     }
 
-    private func card<V: View>(@ViewBuilder _ content: () -> V) -> some View {
+    private func card<V: View>(verticalPadding: CGFloat = NoopMetrics.cardInnerPadding,
+                              @ViewBuilder _ content: () -> V) -> some View {
         content()
-            .padding(16)
+            .padding(.horizontal, NoopMetrics.cardInnerPadding)
+            .padding(.vertical, verticalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(NoopPanelSurface(cornerRadius: 22, surfaceOpacity: cardOpacity))
+            .background(NoopPanelSurface(cornerRadius: NoopMetrics.todayCardRadius, surfaceOpacity: cardOpacity))
     }
 
     // MARK: - Data
