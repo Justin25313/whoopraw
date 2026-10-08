@@ -28,6 +28,7 @@ struct TodayCustomizationSheet: View {
     private let initialHostedDraft: EditableLayoutDraft<HostedCard>
     private let initialDetailed: Bool
     private let initialWindowDays: Int
+    private let pinsScoreOverview: Bool
 
     @Binding private var sectionOrderRaw: String
     @Binding private var hiddenSectionsRaw: String
@@ -65,6 +66,7 @@ struct TodayCustomizationSheet: View {
 
     init(
         initialDestination: TodayCustomizationDestination = .today,
+        pinsScoreOverview: Bool = false,
         sectionOrderRaw: Binding<String>,
         hiddenSectionsRaw: Binding<String>,
         keyMetricsRaw: Binding<String>,
@@ -73,6 +75,7 @@ struct TodayCustomizationSheet: View {
         dashboardCardsRaw: Binding<String>,
         hostedCardsRaw: Binding<String>
     ) {
+        self.pinsScoreOverview = pinsScoreOverview
         _sectionOrderRaw = sectionOrderRaw
         _hiddenSectionsRaw = hiddenSectionsRaw
         _keyMetricsRaw = keyMetricsRaw
@@ -82,6 +85,7 @@ struct TodayCustomizationSheet: View {
         _hostedCardsRaw = hostedCardsRaw
 
         let fullSectionOrder = TodayLayoutPrefs.decodeOrder(sectionOrderRaw.wrappedValue)
+            .filter { !pinsScoreOverview || $0 != .hero }
         let hiddenSectionSet = Set(TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw.wrappedValue))
         let sections = EditableLayoutDraft(
             visible: fullSectionOrder.filter { !hiddenSectionSet.contains($0) },
@@ -196,9 +200,10 @@ struct TodayCustomizationSheet: View {
     private func resetCurrentLayout() {
         switch currentDestination {
         case .today:
+            let sections = TodaySection.defaultOrder.filter { !pinsScoreOverview || $0 != .hero }
             sectionDraft = EditableLayoutDraft(
-                visible: TodaySection.defaultOrder,
-                allItems: TodaySection.defaultOrder
+                visible: sections,
+                allItems: sections
             )
         case .keyMetrics:
             keyMetricDraft = EditableLayoutDraft(
@@ -225,7 +230,9 @@ struct TodayCustomizationSheet: View {
     }
 
     private func save() {
-        sectionOrderRaw = TodayLayoutPrefs.encode(sectionDraft.visible + sectionDraft.hidden)
+        // The compact header owns the score overview; only the content below it is configurable.
+        let pinned: [TodaySection] = pinsScoreOverview ? [.hero] : []
+        sectionOrderRaw = TodayLayoutPrefs.encode(pinned + sectionDraft.visible + sectionDraft.hidden)
         hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(sectionDraft.hidden)
         keyMetricsRaw = KeyMetricPrefs.encode(keyMetricDraft.visible)
         keyMetricsDetailed = detailed

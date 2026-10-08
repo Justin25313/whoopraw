@@ -27,6 +27,11 @@ public enum NoopMetrics {
     public static let tabBarClearance: CGFloat = 76  // iOS: extra bottom scroll room so the last card clears the floating tab bar
     /// Canonical diameter for compact circular controls in dense header chrome.
     public static let compactControlSize: CGFloat = 36
+    /// Equal leading/trailing slots keep the Today day selector centered beside profile and device.
+    public static let todayHeaderSideWidth: CGFloat = 72
+    public static let todayDaySelectorMaxWidth: CGFloat = 184
+    public static let todayScoreDiameter: CGFloat = 80
+    public static let todaySyncSpinnerScale: CGFloat = 0.5
     /// Expanded width of the compact charge-to-sync status capsule.
     public static let syncIndicatorExpandedWidth: CGFloat = 108
     /// Optical space between the sync ring and its transient label.

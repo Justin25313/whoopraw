@@ -210130,6 +210130,11 @@
         }
       }
     },
+    "WhoopRaw": {
+      "comment": "Application brand name; displayed unchanged in every language.",
+      "extractionState": "manual",
+      "shouldTranslate": false
+    },
     "Wim Hof": {
       "localizations": {
         "en": {
