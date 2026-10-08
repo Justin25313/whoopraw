@@ -35,8 +35,9 @@ public enum NoopMetrics {
     public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
     public static let todayMonitorMinHeight: CGFloat = 128
     public static let todaySyncSpinnerScale: CGFloat = 0.5
-    public static let deviceBandGlyphWidth: CGFloat = 20
-    public static let deviceBandGlyphHeight: CGFloat = 26
+    public static let deviceBandGlyphWidth: CGFloat = 28
+    public static let deviceBandGlyphHeight: CGFloat = 36
+    public static let deviceBatteryDotDiameter: CGFloat = 6
     public static let deviceBandStrokeWidth: CGFloat = 1.4
     /// Slim scale indicator and optional real-series chart beneath a Key Metrics row.
     public static let keyMetricBarHeight: CGFloat = 3

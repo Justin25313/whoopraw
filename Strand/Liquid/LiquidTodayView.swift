@@ -2861,8 +2861,16 @@ private struct LiquidBatteryButton: View {
             StrapBandGlyph()
                 .stroke(style: StrokeStyle(lineWidth: NoopMetrics.deviceBandStrokeWidth,
                                            lineCap: .round, lineJoin: .round))
+                .foregroundStyle(StrandPalette.textPrimary)
                 .frame(width: NoopMetrics.deviceBandGlyphWidth,
                        height: NoopMetrics.deviceBandGlyphHeight)
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(batteryTint)
+                        .frame(width: NoopMetrics.deviceBatteryDotDiameter,
+                               height: NoopMetrics.deviceBatteryDotDiameter)
+                        .offset(y: NoopMetrics.space2)
+                }
         }
     }
 
@@ -2891,7 +2899,7 @@ private struct LiquidBatteryButton: View {
                         .fixedSize()
                     deviceGlyph
                         .accessibilityHidden(true)
-                        .overlay(alignment: .topTrailing) {
+                        .overlay(alignment: .bottomTrailing) {
                             if syncing {
                                 ProgressView()
                                     .tint(batteryTint)
