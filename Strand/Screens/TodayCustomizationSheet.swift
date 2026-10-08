@@ -31,6 +31,7 @@ struct TodayCustomizationSheet: View {
     private let initialFixedHidden: Set<TodaySection>
     private let pinsScoreOverview: Bool
     private let omittedKeyMetrics: Set<KeyMetric>
+    private let omittedDashboardCards: Set<DashboardCard>
 
     @Binding private var sectionOrderRaw: String
     @Binding private var hiddenSectionsRaw: String
@@ -76,6 +77,7 @@ struct TodayCustomizationSheet: View {
         initialDestination: TodayCustomizationDestination = .today,
         pinsScoreOverview: Bool = false,
         omittedKeyMetrics: Set<KeyMetric> = [],
+        omittedDashboardCards: Set<DashboardCard> = [],
         sectionOrderRaw: Binding<String>,
         hiddenSectionsRaw: Binding<String>,
         keyMetricsRaw: Binding<String>,
@@ -86,6 +88,7 @@ struct TodayCustomizationSheet: View {
     ) {
         self.pinsScoreOverview = pinsScoreOverview
         self.omittedKeyMetrics = omittedKeyMetrics
+        self.omittedDashboardCards = omittedDashboardCards
         _sectionOrderRaw = sectionOrderRaw
         _hiddenSectionsRaw = hiddenSectionsRaw
         _keyMetricsRaw = keyMetricsRaw
@@ -109,8 +112,9 @@ struct TodayCustomizationSheet: View {
             allItems: KeyMetric.defaultOrder.filter { !omittedKeyMetrics.contains($0) }
         )
         let cards = EditableLayoutDraft(
-            visible: DashboardCardPrefs.decodeEnabled(dashboardCardsRaw.wrappedValue),
-            allItems: DashboardCard.canonicalOrder
+            visible: DashboardCardPrefs.decodeEnabled(dashboardCardsRaw.wrappedValue)
+                .filter { !omittedDashboardCards.contains($0) },
+            allItems: DashboardCard.canonicalOrder.filter { !omittedDashboardCards.contains($0) }
         )
         let hosted = EditableLayoutDraft(
             visible: HostedCardPrefs.decodeEnabled(hostedCardsRaw.wrappedValue),
@@ -233,8 +237,8 @@ struct TodayCustomizationSheet: View {
             windowDays = 14
         case .yourCards:
             dashboardDraft = EditableLayoutDraft(
-                visible: DashboardCard.defaultSelection,
-                allItems: DashboardCard.canonicalOrder
+                visible: DashboardCard.defaultSelection.filter { !omittedDashboardCards.contains($0) },
+                allItems: DashboardCard.canonicalOrder.filter { !omittedDashboardCards.contains($0) }
             )
         case .addedCards:
             hostedDraft = EditableLayoutDraft(

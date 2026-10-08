@@ -491,6 +491,7 @@ struct LiquidTodayView: View {
                 initialDestination: destination,
                 pinsScoreOverview: true,
                 omittedKeyMetrics: pinnedKeyMetrics,
+                omittedDashboardCards: [.stress],
                 sectionOrderRaw: $sectionOrderRaw,
                 hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw,
@@ -817,6 +818,7 @@ struct LiquidTodayView: View {
             // reorder in Customise reflects on the home screen live. The hydration filter mirrors classic
             // TodayView's `enabledDashboardCards` and Android's `it != HYDRATION || hydrationEnabled`.
             ForEach(DashboardCardPrefs.decodeEnabled(dashboardCardsRaw)
+                        .filter { selectedDayOffset != 0 || $0 != .stress }
                         .filter { hydrationEnabled || $0 != .hydration }
                         // Coach off means the AI is off, so the launcher card goes with the tab: leaving it
                         // on Today would offer a feature the wearer has just switched off. Same gate shape
