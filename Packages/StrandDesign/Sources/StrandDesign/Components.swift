@@ -28,17 +28,15 @@ public enum NoopMetrics {
     /// Canonical diameter for compact circular controls in dense header chrome.
     public static let compactControlSize: CGFloat = 36
     /// Equal leading/trailing slots keep the Today day selector centered beside profile and device.
-    public static let todayHeaderSideWidth: CGFloat = 72
+    public static let todayHeaderSideWidth: CGFloat = 80
     public static let todayDaySelectorMaxWidth: CGFloat = 184
     public static let todayScoreDiameter: CGFloat = 80
     /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
     public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
     public static let todayMonitorMinHeight: CGFloat = 128
     public static let todaySyncSpinnerScale: CGFloat = 0.5
-    public static let deviceBandGlyphWidth: CGFloat = 28
-    public static let deviceBandGlyphHeight: CGFloat = 36
-    public static let deviceBatteryDotDiameter: CGFloat = 6
-    public static let deviceBandStrokeWidth: CGFloat = 1.4
+    public static let deviceBandGlyphWidth: CGFloat = 44
+    public static let deviceBandGlyphHeight: CGFloat = 44
     /// Slim scale indicator and optional real-series chart beneath a Key Metrics row.
     public static let keyMetricBarHeight: CGFloat = 3
     public static let keyMetricTrendHeight: CGFloat = 24

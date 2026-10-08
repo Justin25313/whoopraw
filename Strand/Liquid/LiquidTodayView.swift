@@ -2853,24 +2853,30 @@ private struct LiquidBatteryButton: View {
         return "–"
     }
 
+    private var bandAsset: String {
+        guard case .charge(let percent, _, _) = batteryDisplay else { return "deviceBandGreen" }
+        if percent < 15 { return "deviceBandRed" }
+        if percent < 35 { return "deviceBandAmber" }
+        return "deviceBandGreen"
+    }
+
+    private var bandSaturation: Double {
+        if case .charge = batteryDisplay { return 1 }
+        return 0
+    }
+
     @ViewBuilder
     private var deviceGlyph: some View {
         if case .charge(_, _, true) = batteryDisplay {
             Image(systemName: "circle").font(StrandFont.headline)
         } else {
-            StrapBandGlyph()
-                .stroke(style: StrokeStyle(lineWidth: NoopMetrics.deviceBandStrokeWidth,
-                                           lineCap: .round, lineJoin: .round))
-                .foregroundStyle(StrandPalette.textPrimary)
+            Image(bandAsset)
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .saturation(bandSaturation)
                 .frame(width: NoopMetrics.deviceBandGlyphWidth,
                        height: NoopMetrics.deviceBandGlyphHeight)
-                .overlay(alignment: .topTrailing) {
-                    Circle()
-                        .fill(batteryTint)
-                        .frame(width: NoopMetrics.deviceBatteryDotDiameter,
-                               height: NoopMetrics.deviceBatteryDotDiameter)
-                        .offset(y: NoopMetrics.space2)
-                }
         }
     }
 

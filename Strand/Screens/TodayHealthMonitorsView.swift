@@ -84,6 +84,7 @@ struct TodayHealthMonitorsView: View {
         .padding(NoopMetrics.space3)
         .frame(maxWidth: .infinity, minHeight: NoopMetrics.todayMonitorMinHeight, alignment: .topLeading)
         .background(NoopPanelSurface(cornerRadius: NoopMetrics.todayCardRadius))
+        .contentShape(Rectangle())
     }
 }
 
