@@ -815,6 +815,7 @@ private struct StressInputs: Equatable {
 
 struct StressModel {
     let score: Double            // 0–3 (today)
+    let scoredDay: String        // Actual source day, including last-night carry.
     let band: StressBand
     let explanation: String
     let rhrToday: Int?
@@ -887,6 +888,7 @@ struct StressModel {
         let s = storedToday ?? derivedToday ?? 1.5
         self.usingStored = storedToday != nil
         self.score = s
+        self.scoredDay = today.day
         self.band = StressBand(score: s)
         self.rhrToday = today.restingHr
         self.hrvToday = hrvT

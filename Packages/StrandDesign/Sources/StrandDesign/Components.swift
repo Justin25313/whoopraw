@@ -33,6 +33,7 @@ public enum NoopMetrics {
     public static let todayScoreDiameter: CGFloat = 80
     /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
     public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
+    public static let todayMonitorMinHeight: CGFloat = 128
     public static let todaySyncSpinnerScale: CGFloat = 0.5
     public static let deviceBandGlyphWidth: CGFloat = 20
     public static let deviceBandGlyphHeight: CGFloat = 26

@@ -57,7 +57,8 @@ final class BehaviorStore: ObservableObject {
     /// recovery-derived optimal band. Default OFF like every other automation.
     @Published var strainTargetNudge: Bool { didSet { d.set(strainTargetNudge, forKey: K.strainTargetNudge) } }
 
-    private let d = UserDefaults.standard
+    private let d: UserDefaults
+    static let healthMonitorActivationKey = "whoopraw.healthMonitorActivated.v1"
     private enum K {
         static let dtAction = "behavior.doubleTapAction"
         static let dtShortcut = "behavior.doubleTapShortcut"
@@ -82,7 +83,8 @@ final class BehaviorStore: ObservableObject {
         static let strainTargetNudge = "behavior.strainTargetNudge"
     }
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        d = defaults
         doubleTapAction = MacActionKind(rawValue: d.string(forKey: K.dtAction) ?? "") ?? .none
         doubleTapShortcut = d.string(forKey: K.dtShortcut) ?? ""
         autoLockOnWristOff = d.object(forKey: K.autoLock) as? Bool ?? false
@@ -102,6 +104,15 @@ final class BehaviorStore: ObservableObject {
         batteryAlerts = d.object(forKey: K.batteryAlerts) as? Bool ?? true
         batteryPredictiveAlerts = d.object(forKey: K.batteryPredictiveAlerts) as? Bool ?? true
         strainTargetNudge = d.object(forKey: K.strainTargetNudge) as? Bool ?? false
+    }
+
+    /// Enables the requested health watch once; subsequent explicit disabling remains authoritative.
+    @discardableResult
+    func activateHealthMonitorOnce() -> Bool {
+        guard !d.bool(forKey: Self.healthMonitorActivationKey) else { return false }
+        illnessWatch = true
+        d.set(true, forKey: Self.healthMonitorActivationKey)
+        return true
     }
 
     // MARK: Charge baseline recalibration

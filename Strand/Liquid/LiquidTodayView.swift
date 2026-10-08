@@ -56,6 +56,7 @@ struct LiquidTodayView: View {
     /// Input providers for the three scores, keyed by recovery / strain / sleep_performance.
     @State private var heroProviderByMetric: [String: ScoreInputProvider] = [:]
     @State private var stress: Double?             // StressModel(...).score, 0–3
+    @State private var stressDay: String?
     @State private var fitnessAge: Double?         // exploreSeries("fitness_age").last
     @State private var vo2max: Double?             // exploreSeries("vo2max_est").last (#1391)
     @State private var vitality: Double?           // exploreSeries("vitality").last
@@ -83,8 +84,7 @@ struct LiquidTodayView: View {
     /// hosted sleep card pays none of the extra Repository work. nil until (and unless) it's built.
     @State private var hostedSleepModel: SleepModel? = nil
 
-    // #2040: today's scored stress for the hosted curve card. Loaded only when that card is hosted, the
-    // same "hosting none pays nothing" rule the sleep model follows. `StressDayCurve` self-gates on a
+    // Today's scored stress is shared by the monitor and the optional hosted curve. `StressDayCurve` gates on a
     // cheap heart-rate fingerprint and memoises, so the widget, this shell and the other Today view all
     // share one computation rather than scoring the day three times.
     @State private var hostedStressHours: [DaytimeStress.HourPoint] = []
@@ -353,6 +353,10 @@ struct LiquidTodayView: View {
                     if sectionOrder.contains(.synthesis),
                        selectedDayOffset != 0 || synthesisDismissedDay != Repository.logicalDayKey(Date()) {
                         synthesisSection
+                    }
+                    if selectedDayOffset == 0 {
+                        TodayHealthMonitorsView(stressHours: hostedStressHours,
+                                                dailyStress: stress, dailyStressDay: stressDay)
                     }
                     if chargeLegacyRRGap { ChargeLegacyRRGapNote() }
                     // The strain/illness early-warning banner, dropped in the liquid Home rewrite. Liquid is
@@ -1796,9 +1800,12 @@ struct LiquidTodayView: View {
                 .map { ($0.day, $0.value) },
             "weight": (await weightA).filter { $0.day >= sparkCutoff && $0.day <= selectedDayKey },
         ]
-        stress = await Task.detached(priority: .utility) {
-            StressModel(days: daysSnapshot, stored: storedStress)?.score
+        let stressSnapshot = await Task.detached(priority: .utility) {
+            let model = StressModel(days: daysSnapshot, stored: storedStress)
+            return (model?.score, model?.scoredDay)
         }.value
+        stress = stressSnapshot.0
+        stressDay = stressSnapshot.1
         fitnessAge = (await fitA).last?.value   // history-wide latest banked (not day-scoped)
         vo2max = (await vo2A).last?.value        // #1391: latest banked VO₂max estimate
         vitality = (await vitA).last?.value
@@ -1874,8 +1881,8 @@ struct LiquidTodayView: View {
             hostedSleepModel = nil
         }
 
-        // #2040: and today's stress, on the same "only when hosted" rule.
-        if HostedCardPrefs.decodeEnabled(hostedCardsRaw).contains(.stressToday) {
+        // The fixed monitor and optional hosted chart use one memoized foreground stress curve.
+        if selectedDayOffset == 0 {
             let result = await StressDayCurve.today(
                 repo: repo,
                 personalBaseline: PuffinExperiment.stressPersonalBaselineEnabled
