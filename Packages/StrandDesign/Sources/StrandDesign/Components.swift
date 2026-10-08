@@ -32,6 +32,9 @@ public enum NoopMetrics {
     public static let todayDaySelectorMaxWidth: CGFloat = 184
     public static let todayScoreDiameter: CGFloat = 80
     public static let todaySyncSpinnerScale: CGFloat = 0.5
+    public static let deviceBandGlyphWidth: CGFloat = 20
+    public static let deviceBandGlyphHeight: CGFloat = 26
+    public static let deviceBandStrokeWidth: CGFloat = 1.4
     /// Expanded width of the compact charge-to-sync status capsule.
     public static let syncIndicatorExpandedWidth: CGFloat = 108
     /// Optical space between the sync ring and its transient label.

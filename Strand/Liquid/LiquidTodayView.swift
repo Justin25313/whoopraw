@@ -4,7 +4,7 @@
 //  This is the FULL Today, re-created faithfully from the locked mockup
 //  (scratchpad/liquid-metal-home.html): sky title + record/add/battery controls,
 //  the three scores as liquid vessels with a card-level source badge, the live heart-rate
-//  thread, the five "your cards" as liquid chips, a greeting + readiness pills,
+//  thread, the five "your cards" as liquid chips, a greeting + synthesis,
 //  Synthesis, Recovery Vitals, a Key Metrics grid (incl. steps), Last Workouts
 //  and Data Sources. Every value binds to the SAME real data the classic
 //  TodayView reads (accessors verified against TodayView.swift), and every tap
@@ -345,7 +345,6 @@ struct LiquidTodayView: View {
                     scene
                     heroCard
                     if chargeLegacyRRGap { ChargeLegacyRRGapNote() }
-                    customizeTodayTile
                     // The strain/illness early-warning banner, dropped in the liquid Home rewrite. Liquid is
                     // the DEFAULT Today on both platforms (RootTabView.swift's liquidTodayEnabled = true,
                     // RootView.swift likewise), so while this was unmounted a RAISED health alert had no
@@ -367,7 +366,9 @@ struct LiquidTodayView: View {
                         case .hero: EmptyView()
                         case .liveSession: if liveSessionsBeta { liveSessionStartRow }
                         case .synthesis: synthesisSection
-                        case .keyMetrics: keyMetricsSection
+                        case .keyMetrics:
+                            keyMetricsSection
+                            customizeTodayTile
                         case .workouts: lastWorkoutsSection
                         case .heartRate: heartRateSection
                         case .recoveryVitals: recoveryVitalsSection
@@ -385,6 +386,8 @@ struct LiquidTodayView: View {
                         case .addedCards: if selectedDayOffset == 0 { hostedCardsSection }
                         }
                     }
+                    // Keep customization reachable when the user hides the Key Metrics section.
+                    if !sectionOrder.contains(.keyMetrics) { customizeTodayTile }
                     // Opt-in "looks like a workout?" suggestion, dropped in the liquid Home rewrite. Its
                     // Settings toggle (PuffinExperiment.autoDetectWorkoutsKey) had no visible effect on the
                     // DEFAULT screen: the card's only mount was classic TodayView, so a user could switch
@@ -617,7 +620,7 @@ struct LiquidTodayView: View {
                 .foregroundStyle(StrandPalette.textPrimary)
                 .buttonStyle(.plain)
                 .frame(maxWidth: NoopMetrics.todayDaySelectorMaxWidth)
-                .background(.ultraThinMaterial, in: Capsule())
+                .nativeLiquidGlassDaySelectorChrome()
                 .frame(maxWidth: .infinity)
 
                 LiquidBatteryButton()
@@ -719,7 +722,8 @@ struct LiquidTodayView: View {
                               decimals: effortScale == .whoop ? 1 : 0,
                               detailRoute: .metric(HeroRingMetric.effort))
             }
-            if let sourceLabel = heroSourceLabel {
+            if let sourceLabel = heroSourceLabel,
+               sourceLabel != TodayView.todayScoreProviderLabel(sourceId: Repository.whoopSource, brand: nil) {
                 SourceBadge("\(sourceLabel)", tint: StrandPalette.textSecondary)
                     .accessibilityLabel(Text("Source: \(sourceLabel)"))
             }
@@ -1141,7 +1145,7 @@ struct LiquidTodayView: View {
         .background(NoopPanelSurface(tint: tint, cornerRadius: 20, surfaceOpacity: cardOpacity))
     }
 
-    // MARK: - Synthesis (greeting + readiness pills + one-liner)
+    // MARK: - Synthesis (greeting + explanation)
 
     /// Liquid parity with classic `effortZeroNote`: the "no cardio load yet" line shown in the synthesis
     /// card when today's Effort is ~0, so a calm day explains itself instead of a bare 0. Reuses classic's
@@ -1153,34 +1157,12 @@ struct LiquidTodayView: View {
 
     private var synthesisSection: some View {
         VStack(spacing: 8) {
-            HStack {
-                Text(greeting).font(StrandFont.rounded(19)).foregroundStyle(StrandPalette.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.6)   // yield to the pills rather than push them to wrap
-                Spacer(minLength: 8)
-                HStack(spacing: 8) {
-                    if let word = readinessWord {
-                        Text(word)
-                            .font(StrandFont.caption.weight(.bold))
-                            .foregroundStyle(StrandPalette.chargeColor)
-                            .padding(.horizontal, 13)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(StrandPalette.chargeColor.opacity(0.14))
-                                .overlay(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1)))
-                    }
-                    HStack(spacing: 5) {
-                        Circle().fill(StrandPalette.chargeColor).frame(width: 6, height: 6)
-                        Text(chargeDisplay.stateLabel)
-                            .font(StrandFont.caption.weight(.bold))
-                            .foregroundStyle(StrandPalette.chargeColor)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1))
-                }
-                .fixedSize(horizontal: true, vertical: false)   // pills keep their natural width — no "Calibrating" wrap
-            }
-            .padding(.horizontal, 2)
-            .padding(.top, 4)
+            Text(greeting)
+                .font(StrandFont.headline)
+                .foregroundStyle(StrandPalette.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, NoopMetrics.spaceHalf)
+                .padding(.top, NoopMetrics.space1)
 
             Button { withAnimation(.easeInOut(duration: 0.2)) { synthesisExpanded.toggle() } } label: {
                 card {
@@ -1196,12 +1178,18 @@ struct LiquidTodayView: View {
                                 .foregroundStyle(StrandPalette.textTertiary)
                         }
                         // While the baseline calibrates, the honest "N of 4 nights" progress replaces the
-                        // readiness one-liner here — the same swap classic makes (`calibrationDetail ??
-                        // synthesisCardDetail`), so the count the short greeting pill can't carry lands in
-                        // the card and both Today screens read identically.
+                        // readiness one-liner here, matching the classic Today explanation.
                         Text(chargeDisplay.calibrationDetail ?? synthLine)
                             .font(StrandFont.body).foregroundStyle(StrandPalette.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
+                        // Keep exceptional score-state context in the explanation, without greeting badges.
+                        if case .carried(_, let caption) = chargeDisplay {
+                            Text(caption).font(StrandFont.caption)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        } else if case .noData = chargeDisplay {
+                            Text(chargeDisplay.stateLabel).font(StrandFont.caption)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
                         // The reason the count is not moving, when nights are arriving empty. Sits under
                         // the progress rather than replacing it: the wearer needs both the number and why.
                         if let why = chargeDisplay.calibrationReason(
@@ -1913,7 +1901,7 @@ struct LiquidTodayView: View {
     // MARK: - Derived (sync, off repo.today / repo.days)
 
     /// Cached in load() — ReadinessEngine.evaluate scans the full history and was invoked ~3× per body
-    /// pass (readinessWord + synthLine + readiness.summary). The fallback runs only in the brief window
+    /// pass (synthLine + readiness.summary). The fallback runs only in the brief window
     /// before the first load() populates the cache.
     private var readiness: ReadinessEngine.Readiness {
         cachedReadiness ?? ReadinessEngine.evaluate(days: repo.days, today: cachedDisplayDay?.day)
@@ -1940,15 +1928,6 @@ struct LiquidTodayView: View {
             if labels.count == 2 { break }
         }
         return labels.isEmpty ? nil : labels.joined(separator: " + ")
-    }
-
-    private var readinessWord: String? {
-        switch readiness.level {
-        case .primed: return String(localized: "Push")
-        case .balanced: return String(localized: "Maintain")
-        case .strained, .rundown: return String(localized: "Rest")
-        case .insufficient: return nil
-        }
     }
 
     private var synthLine: String {
@@ -2741,11 +2720,8 @@ extension LiquidTodayView {
             }
         }
 
-        /// The short Charge-state pill beside the greeting. It shares a row with the greeting under a
-        /// `fixedSize`, so it stays SHORT — the carried day's full "Last night · <date>" stamp lives in
-        /// `caption`, not here. Only `.calibrating` may say "Calibrating": the pill used to key off
-        /// `recovery != nil` and so claimed a calibrating baseline on every unscored day, including a
-        /// trusted wearer who simply hadn't worn the strap that night.
+        /// Compact score-state wording. Exceptional no-data context remains in the synthesis card;
+        /// calibration progress and a carried score's full date are presented separately.
         var stateLabel: String {
             switch self {
             case .scored: return String(localized: "Solid")
@@ -2759,9 +2735,8 @@ extension LiquidTodayView {
         /// `Baselines.minNightsSeed` nights" progress classic `TodayView.calibrationDetail` surfaces, so a
         /// wearer in their first few nights reads identical calibration copy on both Today screens (before
         /// this, Liquid dropped the count and showed a bare "Calibrating"). Non-nil ONLY for `.calibrating`:
-        /// the compact greeting pill stays short ("Calibrating") because it shares a `fixedSize` row with
-        /// the greeting, so the count lives here in the card, exactly as classic keeps it out of its
-        /// `ScoreStatePill`. Reuses classic's String Catalog key verbatim — one entry serves both screens.
+        /// the count belongs in the explanation rather than beside the greeting. Reuses classic's
+        /// String Catalog key verbatim — one entry serves both screens.
         var calibrationDetail: String? {
             guard case .calibrating(let nights) = self else { return nil }
             return String(localized: "Learning your baseline, \(nights) of \(Baselines.minNightsSeed) nights.")
@@ -2859,9 +2834,17 @@ private struct LiquidBatteryButton: View {
         return "–"
     }
 
-    private var deviceSymbol: String {
-        if case .charge(_, _, true) = batteryDisplay { return "circle" }
-        return "applewatch"
+    @ViewBuilder
+    private var deviceGlyph: some View {
+        if case .charge(_, _, true) = batteryDisplay {
+            Image(systemName: "circle").font(StrandFont.headline)
+        } else {
+            StrapBandGlyph()
+                .stroke(style: StrokeStyle(lineWidth: NoopMetrics.deviceBandStrokeWidth,
+                                           lineCap: .round, lineJoin: .round))
+                .frame(width: NoopMetrics.deviceBandGlyphWidth,
+                       height: NoopMetrics.deviceBandGlyphHeight)
+        }
     }
 
     private var isCharging: Bool {
@@ -2887,8 +2870,8 @@ private struct LiquidBatteryButton: View {
                         .font(StrandFont.caption)
                         .monospacedDigit()
                         .fixedSize()
-                    Image(systemName: deviceSymbol)
-                        .font(StrandFont.headline)
+                    deviceGlyph
+                        .accessibilityHidden(true)
                         .overlay(alignment: .topTrailing) {
                             if syncing {
                                 ProgressView()
