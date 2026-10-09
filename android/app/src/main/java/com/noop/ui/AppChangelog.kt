@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.0.0"
+    const val CURRENT_VERSION = "12.0.5"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.0.5",
+            title = uiString(R.string.l10n_app_changelog_sync_905f6309),
+            date = "October 2026",
+            items = listOf(
+                "**New Apple app icon.** The selected white band artwork on black is now the app icon on iPhone and Mac. The alternate iPhone icon uses the same artwork.",
+                "**Pull down to sync.** At the top of Today, a neutral ring fills as you pull. Crossing the threshold gives a light haptic tick on iPhone; releasing requests strap history when the link is ready and no sync is already running.",
+            ),
+        ),
         Release(
             version = "12.0.0",
             title = uiString(R.string.l10n_app_changelog_today_your_way_heart_rate_any_5e1308b3),
