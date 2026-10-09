@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.0.6"
+    const val CURRENT_VERSION = "12.0.7"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.0.7",
+            title = uiString(R.string.l10n_app_changelog_sync_905f6309),
+            date = "October 2026",
+            items = listOf(
+                "**WHOOP 4 charge after reopening.** Request the real battery percentage once the connection handshake and reply notifications are ready. If history is transferring, retain the read until the offload ends.",
+                "**Readable Today calendar and sync status.** The graphical date picker has a full calendar footprint. Refresh feedback appears below the app name, leaving the day selector, profile and band controls unobstructed.",
+            ),
+        ),
         Release(
             version = "12.0.6",
             title = uiString(R.string.l10n_app_changelog_sync_905f6309),
