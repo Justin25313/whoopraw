@@ -453,6 +453,13 @@ struct LiquidTodayView: View {
                     .padding(.top, NoopMetrics.space2)
                     .accessibilityIdentifier("today.pullSyncFeedback")
                     .allowsHitTesting(false)
+                    .task(id: refreshing) {
+                        guard !refreshing else { return }
+                        // The message outlives the native spinner, so its outcome can actually be read.
+                        try? await Task.sleep(nanoseconds: 6_000_000_000)
+                        guard !Task.isCancelled else { return }
+                        pullSyncFeedback = nil
+                    }
             }
         }
         // The sky is a FIXED full-bleed backdrop drawn behind the scroll content, edge-to-edge under the
@@ -578,9 +585,8 @@ struct LiquidTodayView: View {
         }
         await repo.refresh()
         await load()
-        // Keep the outcome readable; this also gives the native refresh control a visible completion.
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        pullSyncFeedback = nil
+        // The short refresh indicator completes independently of the longer-lived outcome message.
+        try? await Task.sleep(nanoseconds: 350_000_000)
         withAnimation(.easeOut(duration: 0.25)) { refreshing = false }
     }
 
