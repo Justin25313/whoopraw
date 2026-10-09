@@ -910,6 +910,7 @@ public final class BLEManager: NSObject, ObservableObject {
     /// didUpdateNotificationStateFor re-fire (or any other later call into the check) can't double-bump.
     /// Reset on disconnect.
     private var connectSettledSignaled = false
+    private var initialWhoop4BatteryRead = Whoop4InitialBatteryRead()
     /// #613: set for one restored session when CoreBluetooth hands back an ALREADY-connected peripheral
     /// via `willRestoreState`. The inherited notify subscriptions come back reported-active but no longer
     /// deliver, and the subscribe loops skip anything already `isNotifying` — so nothing re-arms and no live
@@ -2699,6 +2700,8 @@ public final class BLEManager: NSObject, ObservableObject {
         guard backfilling else { return }
         backfilling = false
         state.backfilling = false
+        // A late notify confirmation may have deferred the initial read until history finished.
+        refreshInitialWhoop4BatteryIfReady()
         // #174: a backfill just ended. Start (or extend) the deep-packet cooldown from this instant so
         // any type-0x2F records the strap flushes in the seconds after the session aren't miscounted as
         // the live R22 stream — they're the offload's tail.
@@ -6250,6 +6253,7 @@ extension BLEManager: @preconcurrency CBCentralManagerDelegate {
         state.historyReady = false
         cmdNotifyConfirmedActive = false   // #34: a fresh connection needs its own notify-confirm + settle
         connectSettledSignaled = false
+        initialWhoop4BatteryRead.reset()
         restoreNeedsResubscribe = false    // #613: a real reconnect isn't a restore — never force-toggle here
         realtimeArmedAt = nil   // cleared after the marginal-radio detector above read it (#80)
         // Reset backfill state so the next connect starts a fresh offload (incl. the syncing pill —
@@ -7001,11 +7005,23 @@ extension BLEManager: @preconcurrency CBPeripheralDelegate {
     /// the alarm re-arm (AppModel's `live.$connectSettled` sink) waits on instead of raw `bonded`, so
     /// SET_ALARM_TIME/GET_ALARM_TIME go out on a link whose reply channel is confirmed live (#34).
     private func maybeSignalConnectSettled() {
+        refreshInitialWhoop4BatteryIfReady()
         guard connectHandshakeDone, cmdNotifyConfirmedActive, !connectSettledSignaled else { return }
         connectSettledSignaled = true
         state.connectSettled &+= 1
         restoreNeedsResubscribe = false   // #613: forced re-subscribe pass is done — keep-alive resumes normal
         log("Connect settled: handshake done + cmd-notify confirmed — alarm re-arm (if due) can fire now")
+    }
+
+    /// Reuses the manual battery read once per ready WHOOP 4 connection, never during history transfer.
+    private func refreshInitialWhoop4BatteryIfReady() {
+        guard initialWhoop4BatteryRead.takeRequest(
+            isWhoop4: selectedModel.deviceFamily == .whoop4,
+            connected: state.connected && peripheral?.state == .connected,
+            bonded: didBond, handshakeDone: connectHandshakeDone,
+            replyNotificationsActive: cmdNotifyConfirmedActive, backfilling: backfilling) else { return }
+        log("Battery: requesting initial WHOOP 4 reading after reply notifications are active")
+        refreshBattery()
     }
 
     /// SET_CLOCK(10) payload — the 8-byte form `[seconds u32 LE][subseconds u32 LE]`, subseconds in

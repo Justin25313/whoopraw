@@ -30,6 +30,9 @@ public enum NoopMetrics {
     /// Equal leading/trailing slots keep the Today day selector centered beside profile and device.
     public static let todayHeaderSideWidth: CGFloat = 80
     public static let todayDaySelectorMaxWidth: CGFloat = 184
+    /// Full calendar footprint: a compact header anchor must not collapse the graphical picker.
+    public static let dayPickerMinWidth: CGFloat = 320
+    public static let dayPickerMinHeight: CGFloat = 360
     public static let todayScoreDiameter: CGFloat = 80
     /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
     public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius

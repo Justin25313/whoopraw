@@ -443,25 +443,6 @@ struct LiquidTodayView: View {
         #else
         .onPreferenceChange(PullOffsetKey.self) { handlePull($0) }
         #endif
-        .overlay(alignment: .top) {
-            if let feedback = pullSyncFeedback {
-                Text(verbatim: feedback)
-                    .font(StrandFont.caption)
-                    .foregroundStyle(StrandPalette.textPrimary)
-                    .padding(NoopMetrics.space2)
-                    .background(.regularMaterial, in: Capsule())
-                    .padding(.top, NoopMetrics.space2)
-                    .accessibilityIdentifier("today.pullSyncFeedback")
-                    .allowsHitTesting(false)
-                    .task(id: refreshing) {
-                        guard !refreshing else { return }
-                        // The message outlives the native spinner, so its outcome can actually be read.
-                        try? await Task.sleep(nanoseconds: 6_000_000_000)
-                        guard !Task.isCancelled else { return }
-                        pullSyncFeedback = nil
-                    }
-            }
-        }
         // The sky is a FIXED full-bleed backdrop drawn behind the scroll content, edge-to-edge under the
         // status bar. A ScrollView background does not scroll with the content, so pulling down never
         // moves the sky (the exact behaviour the scaffold uses on the classic Today).
@@ -662,12 +643,16 @@ struct LiquidTodayView: View {
                             .contentShape(Rectangle())
                     }
                     .accessibilityLabel("\(dayTitle). Tap to pick a day, swipe to change day.")
+                    .accessibilityIdentifier("today.dayPickerButton")
                     .popover(isPresented: $showDayPicker) {
                         DatePicker("", selection: dayPickerBinding, in: ...Repository.logicalDay(Date()),
                                    displayedComponents: [.date])
                             .datePickerStyle(.graphical)
                             .labelsHidden()
                             .padding(NoopMetrics.space3)
+                            .frame(minWidth: NoopMetrics.dayPickerMinWidth,
+                                   minHeight: NoopMetrics.dayPickerMinHeight)
+                            .accessibilityIdentifier("today.calendarPicker")
                             .liquidPopoverAdaptation()
                     }
 
@@ -690,6 +675,22 @@ struct LiquidTodayView: View {
                     .frame(width: NoopMetrics.todayHeaderSideWidth, alignment: .trailing)
             }
             LiquidWordmark()
+                .accessibilityIdentifier("today.wordmark")
+            if let feedback = pullSyncFeedback {
+                Text(verbatim: feedback)
+                    .font(StrandFont.caption)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("today.pullSyncFeedback")
+                    .allowsHitTesting(false)
+                    .task(id: refreshing) {
+                        guard !refreshing else { return }
+                        try? await Task.sleep(nanoseconds: 6_000_000_000)
+                        guard !Task.isCancelled else { return }
+                        pullSyncFeedback = nil
+                    }
+            }
         }
     }
 
