@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.0.0"
+    static let currentVersion = "12.0.7"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,33 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.0.7",
+            title: "Sync",
+            date: "October 2026",
+            items: [
+                "**WHOOP 4 charge after reopening.** Request the real battery percentage once the connection handshake and reply notifications are ready. If history is transferring, retain the read until the offload ends.",
+                "**Readable Today calendar and sync status.** The graphical date picker has a full calendar footprint. Refresh feedback appears below the app name, leaving the day selector, profile and band controls unobstructed.",
+            ]
+        ),
+        Release(
+            version: "12.0.6",
+            title: "Sync",
+            date: "October 2026",
+            items: [
+                "**Native iPhone pull-to-sync.** Today now uses the system refresh gesture and progress indicator, including on short dashboards, instead of waiting for a custom scroll-offset signal to return to zero.",
+                "**Visible sync feedback.** A pull explains when the band is offline, still pairing or already syncing. A request during pairing is retained through the existing reconnect handshake, and a running sync is reused.",
+            ]
+        ),
+        Release(
+            version: "12.0.5",
+            title: "Sync",
+            date: "October 2026",
+            items: [
+                "**New Apple app icon.** The selected white band artwork on black is now the app icon on iPhone and Mac. The alternate iPhone icon uses the same artwork.",
+                "**Pull down to sync.** At the top of Today, a neutral ring fills as you pull. Crossing the threshold gives a light haptic tick on iPhone; releasing requests strap history when the link is ready and no sync is already running.",
+            ]
+        ),
         Release(
             version: "12.0.0",
             title: "Today your way, heart rate any app can read, and Italian",

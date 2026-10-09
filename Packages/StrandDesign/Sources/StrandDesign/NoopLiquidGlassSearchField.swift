@@ -69,6 +69,23 @@ public struct NoopLiquidGlassSearchField: View {
 }
 
 public extension View {
+    /// Neutral glass for the compound Today day selector, with the same bounds on older Apple OSes.
+    @ViewBuilder
+    func nativeLiquidGlassDaySelectorChrome() -> some View {
+        #if os(iOS)
+        if #available(iOS 26.0, *) {
+            self
+                .glassEffect(.regular.interactive(), in: Capsule())
+                .overlay(Capsule().strokeBorder(StrandPalette.todayDayGlassRim,
+                                               lineWidth: NoopMetrics.hairlineWidth))
+        } else {
+            self.noopDaySelectorMaterial()
+        }
+        #else
+        self.noopDaySelectorMaterial()
+        #endif
+    }
+
     /// Capsule Liquid Glass search chrome. iOS 26 uses interactive `glassEffect`; macOS and older
     /// iOS use the shared elevated pill surface. Glass APIs stay behind `#if os(iOS)` so macOS
     /// (deployment 13) never type-checks or applies Liquid Glass.
@@ -128,5 +145,14 @@ public extension View {
         self.background(
             NoopPanelSurface(cornerRadius: NoopVisualStyle.pillRadius, elevated: false)
         )
+    }
+}
+
+private extension View {
+    /// Neutral material fallback keeps text contrast without requiring Liquid Glass.
+    func noopDaySelectorMaterial() -> some View {
+        self.background(Capsule().fill(.ultraThinMaterial))
+        .overlay(Capsule().strokeBorder(StrandPalette.todayDayGlassRim,
+                                       lineWidth: NoopMetrics.hairlineWidth))
     }
 }

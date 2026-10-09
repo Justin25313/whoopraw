@@ -129,14 +129,14 @@ struct RootTabView: View {
             tab(todayTabRoot, "Today", "square.grid.2x2", path: $tabPaths[0], scrollSignal: scrollTop[0]).tag(0)
             tab(TrendsView(), "Trends", "chart.line.uptrend.xyaxis", path: $tabPaths[1], scrollSignal: scrollTop[1]).tag(1)
             tab(SleepView(), "Sleep", "bed.double", path: $tabPaths[2], scrollSignal: scrollTop[2]).tag(2)
-            // K3: Coach promoted to a top-level tab (was behind the More list). The sparkles icon
-            // matches the More-tab row and the macOS sidebar entry.
+            // K3: Coach promoted to a top-level tab (was behind the More list). Conversation bubbles
+            // match its dashboard launcher and the macOS sidebar entry.
             // Conditional on the master switch. The tags stay LITERAL rather than being renumbered when
             // Coach is absent: `tabPaths` and `scrollTop` are indexed by tag, and More stays tag 4 in both
             // shapes, so a wearer's More tab keeps its identity, its navigation path and its scroll
             // position across a flip instead of inheriting Coach's.
             if coachEnabled {
-                tab(CoachView(), "Coach", "sparkles", path: $tabPaths[3], scrollSignal: scrollTop[3]).tag(3)
+                tab(CoachView(), "Coach", "bubble.left.and.text.bubble.right.fill", path: $tabPaths[3], scrollSignal: scrollTop[3]).tag(3)
             }
             moreTab(path: $tabPaths[4], scrollSignal: scrollTop[4]).tag(4)
         }

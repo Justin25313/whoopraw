@@ -625,6 +625,9 @@ public final class LiveState: ObservableObject {
     /// Single funnel for battery readings — updates the published value AND notifies the hook,
     /// so both write sites (FrameRouter, BLEManager) drive the alert monitor identically.
     public func setBattery(_ pct: Double) {
+        if batteryPct == nil {
+            append(log: "Battery: first live reading \(String(format: "%.1f", pct))%")
+        }
         batteryPct = pct
         bankBatterySample(pct)
         onBatteryUpdate?(pct)

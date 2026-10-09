@@ -28,6 +28,10 @@ struct TodayCustomizationSheet: View {
     private let initialHostedDraft: EditableLayoutDraft<HostedCard>
     private let initialDetailed: Bool
     private let initialWindowDays: Int
+    private let initialFixedHidden: Set<TodaySection>
+    private let pinsScoreOverview: Bool
+    private let omittedKeyMetrics: Set<KeyMetric>
+    private let omittedDashboardCards: Set<DashboardCard>
 
     @Binding private var sectionOrderRaw: String
     @Binding private var hiddenSectionsRaw: String
@@ -44,6 +48,11 @@ struct TodayCustomizationSheet: View {
     @State private var hostedDraft: EditableLayoutDraft<HostedCard>
     @State private var detailed: Bool
     @State private var windowDays: Int
+    @State private var fixedHidden: Set<TodaySection>
+
+    private var fixedSections: [TodaySection] {
+        pinsScoreOverview ? [.synthesis, .liveSession] : []
+    }
 
     private var currentDestination: TodayCustomizationDestination {
         switch path.last {
@@ -61,10 +70,14 @@ struct TodayCustomizationSheet: View {
             || hostedDraft != initialHostedDraft
             || detailed != initialDetailed
             || windowDays != initialWindowDays
+            || fixedHidden != initialFixedHidden
     }
 
     init(
         initialDestination: TodayCustomizationDestination = .today,
+        pinsScoreOverview: Bool = false,
+        omittedKeyMetrics: Set<KeyMetric> = [],
+        omittedDashboardCards: Set<DashboardCard> = [],
         sectionOrderRaw: Binding<String>,
         hiddenSectionsRaw: Binding<String>,
         keyMetricsRaw: Binding<String>,
@@ -73,6 +86,9 @@ struct TodayCustomizationSheet: View {
         dashboardCardsRaw: Binding<String>,
         hostedCardsRaw: Binding<String>
     ) {
+        self.pinsScoreOverview = pinsScoreOverview
+        self.omittedKeyMetrics = omittedKeyMetrics
+        self.omittedDashboardCards = omittedDashboardCards
         _sectionOrderRaw = sectionOrderRaw
         _hiddenSectionsRaw = hiddenSectionsRaw
         _keyMetricsRaw = keyMetricsRaw
@@ -81,19 +97,24 @@ struct TodayCustomizationSheet: View {
         _dashboardCardsRaw = dashboardCardsRaw
         _hostedCardsRaw = hostedCardsRaw
 
+        let pinned: [TodaySection] = pinsScoreOverview ? [.hero, .synthesis, .liveSession] : []
         let fullSectionOrder = TodayLayoutPrefs.decodeOrder(sectionOrderRaw.wrappedValue)
+            .filter { !pinned.contains($0) }
         let hiddenSectionSet = Set(TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw.wrappedValue))
+        let fixedHiddenSet = hiddenSectionSet.intersection(pinned.filter { $0 != .hero })
         let sections = EditableLayoutDraft(
             visible: fullSectionOrder.filter { !hiddenSectionSet.contains($0) },
             hidden: fullSectionOrder.filter { hiddenSectionSet.contains($0) }
         )
         let metrics = EditableLayoutDraft(
-            visible: KeyMetricPrefs.decodeEnabled(keyMetricsRaw.wrappedValue),
-            allItems: KeyMetric.defaultOrder
+            visible: KeyMetricPrefs.decodeEnabled(keyMetricsRaw.wrappedValue)
+                .filter { !omittedKeyMetrics.contains($0) },
+            allItems: KeyMetric.defaultOrder.filter { !omittedKeyMetrics.contains($0) }
         )
         let cards = EditableLayoutDraft(
-            visible: DashboardCardPrefs.decodeEnabled(dashboardCardsRaw.wrappedValue),
-            allItems: DashboardCard.canonicalOrder
+            visible: DashboardCardPrefs.decodeEnabled(dashboardCardsRaw.wrappedValue)
+                .filter { !omittedDashboardCards.contains($0) },
+            allItems: DashboardCard.canonicalOrder.filter { !omittedDashboardCards.contains($0) }
         )
         let hosted = EditableLayoutDraft(
             visible: HostedCardPrefs.decodeEnabled(hostedCardsRaw.wrappedValue),
@@ -106,6 +127,7 @@ struct TodayCustomizationSheet: View {
         initialHostedDraft = hosted
         initialDetailed = keyMetricsDetailed.wrappedValue
         initialWindowDays = keyMetricsWindowDays.wrappedValue
+        initialFixedHidden = fixedHiddenSet
 
         _sectionDraft = State(initialValue: sections)
         _keyMetricDraft = State(initialValue: metrics)
@@ -113,6 +135,7 @@ struct TodayCustomizationSheet: View {
         _hostedDraft = State(initialValue: hosted)
         _detailed = State(initialValue: keyMetricsDetailed.wrappedValue)
         _windowDays = State(initialValue: keyMetricsWindowDays.wrappedValue)
+        _fixedHidden = State(initialValue: fixedHiddenSet)
 
         switch initialDestination {
         case .today:
@@ -130,6 +153,8 @@ struct TodayCustomizationSheet: View {
         NavigationStack(path: $path) {
             TodaySectionsCustomizationPage(
                 draft: $sectionDraft,
+                fixedSections: fixedSections,
+                fixedHidden: $fixedHidden,
                 keyMetricCount: keyMetricDraft.visible.count,
                 dashboardCardCount: dashboardDraft.visible.count,
                 hostedCardCount: hostedDraft.visible.count,
@@ -196,21 +221,24 @@ struct TodayCustomizationSheet: View {
     private func resetCurrentLayout() {
         switch currentDestination {
         case .today:
+            let sections = TodaySection.defaultOrder
+                .filter { !pinsScoreOverview || ![.hero, .synthesis, .liveSession].contains($0) }
             sectionDraft = EditableLayoutDraft(
-                visible: TodaySection.defaultOrder,
-                allItems: TodaySection.defaultOrder
+                visible: sections,
+                allItems: sections
             )
+            fixedHidden = []
         case .keyMetrics:
             keyMetricDraft = EditableLayoutDraft(
-                visible: KeyMetric.defaultOrder,
-                allItems: KeyMetric.defaultOrder
+                visible: KeyMetric.defaultOrder.filter { !omittedKeyMetrics.contains($0) },
+                allItems: KeyMetric.defaultOrder.filter { !omittedKeyMetrics.contains($0) }
             )
             detailed = false
             windowDays = 14
         case .yourCards:
             dashboardDraft = EditableLayoutDraft(
-                visible: DashboardCard.defaultSelection,
-                allItems: DashboardCard.canonicalOrder
+                visible: DashboardCard.defaultSelection.filter { !omittedDashboardCards.contains($0) },
+                allItems: DashboardCard.canonicalOrder.filter { !omittedDashboardCards.contains($0) }
             )
         case .addedCards:
             hostedDraft = EditableLayoutDraft(
@@ -225,8 +253,10 @@ struct TodayCustomizationSheet: View {
     }
 
     private func save() {
-        sectionOrderRaw = TodayLayoutPrefs.encode(sectionDraft.visible + sectionDraft.hidden)
-        hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(sectionDraft.hidden)
+        // Compact Today fixes the scores, summary and actions above the reorderable content.
+        let pinned: [TodaySection] = pinsScoreOverview ? [.hero, .synthesis, .liveSession] : []
+        sectionOrderRaw = TodayLayoutPrefs.encode(pinned + sectionDraft.visible + sectionDraft.hidden)
+        hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(sectionDraft.hidden + fixedSections.filter { fixedHidden.contains($0) })
         keyMetricsRaw = KeyMetricPrefs.encode(keyMetricDraft.visible)
         keyMetricsDetailed = detailed
         keyMetricsWindowDays = windowDays
@@ -252,6 +282,8 @@ struct TodayCustomizationSheet: View {
 
 private struct TodaySectionsCustomizationPage: View {
     @Binding var draft: EditableLayoutDraft<TodaySection>
+    let fixedSections: [TodaySection]
+    @Binding var fixedHidden: Set<TodaySection>
     let keyMetricCount: Int
     let dashboardCardCount: Int
     let hostedCardCount: Int
@@ -271,7 +303,21 @@ private struct TodaySectionsCustomizationPage: View {
             onConfigure: onConfigure,
             onReset: onReset
         ) {
-            EmptyView()
+            if !fixedSections.isEmpty {
+                Section {
+                    ForEach(fixedSections) { section in
+                        Toggle(section.title, isOn: Binding(
+                            get: { !fixedHidden.contains(section) },
+                            set: { visible in
+                                if visible { fixedHidden.remove(section) }
+                                else { fixedHidden.insert(section) }
+                            }
+                        ))
+                        .font(StrandFont.body)
+                        .tint(StrandPalette.accent)
+                    }
+                }
+            }
         }
         .navigationTitle("Customize Today")
         #if os(iOS)

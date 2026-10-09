@@ -570,7 +570,8 @@ public struct ChargeSyncIndicator: View {
         return .healthy
     }
 
-    static func ringColor(_ percent: Double) -> Color {
+    /// Shared charge tint for device readouts, using the same bands as the battery ring.
+    public static func ringColor(_ percent: Double) -> Color {
         switch chargeBand(percent) {
         case .critical: return StrandPalette.statusCritical
         case .warning:  return StrandPalette.statusWarning

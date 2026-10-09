@@ -27,6 +27,24 @@ public enum NoopMetrics {
     public static let tabBarClearance: CGFloat = 76  // iOS: extra bottom scroll room so the last card clears the floating tab bar
     /// Canonical diameter for compact circular controls in dense header chrome.
     public static let compactControlSize: CGFloat = 36
+    /// Equal leading/trailing slots keep the Today day selector centered beside profile and device.
+    public static let todayHeaderSideWidth: CGFloat = 80
+    public static let todayDaySelectorMaxWidth: CGFloat = 184
+    /// Full calendar footprint: a compact header anchor must not collapse the graphical picker.
+    public static let dayPickerMinWidth: CGFloat = 320
+    public static let dayPickerMinHeight: CGFloat = 360
+    public static let todayScoreDiameter: CGFloat = 80
+    /// Tighter corners for the compact Today panels, without changing other screens' card geometry.
+    public static let todayCardRadius: CGFloat = NoopVisualStyle.compactRadius
+    public static let todayMonitorMinHeight: CGFloat = 128
+    public static let deviceBandGlyphWidth: CGFloat = 44
+    public static let deviceBandGlyphHeight: CGFloat = 44
+    /// Measured status-disc bounds in the supplied 1254-pixel outline image, normalized to its canvas.
+    public static let bandOutlineDotFraction: CGFloat = 142.0 / 1254.0
+    public static let bandOutlineDotOrigin = CGPoint(x: 943.0 / 1254.0, y: 421.0 / 1254.0)
+    /// Slim scale indicator and optional real-series chart beneath a Key Metrics row.
+    public static let keyMetricBarHeight: CGFloat = 3
+    public static let keyMetricTrendHeight: CGFloat = 24
     /// Expanded width of the compact charge-to-sync status capsule.
     public static let syncIndicatorExpandedWidth: CGFloat = 108
     /// Optical space between the sync ring and its transient label.

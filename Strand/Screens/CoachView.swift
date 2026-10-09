@@ -200,7 +200,7 @@ struct CoachView: View {
         StrandCard(padding: 20) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 10) {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "bubble.left.and.text.bubble.right.fill")
                         .foregroundStyle(StrandPalette.accent)
                         .accessibilityHidden(true)
                     Text("Connect a provider")

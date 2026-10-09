@@ -128,6 +128,7 @@ struct SettingsView: View {
     @AppStorage("appIcon.alt") private var useNavyIcon = false
     // Light/Dark/System theme. Read by both app roots' .preferredColorScheme; default follows the OS.
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
+    @AppStorage(BandGraphicStyle.storageKey) private var bandGraphicRaw = BandGraphicStyle.realistic.rawValue
     // App-owned copy language. Apple binds a bundle localization at process launch, so this writes the
     // standard AppleLanguages override and takes effect after the user reopens NOOP.
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
@@ -1195,6 +1196,27 @@ struct SettingsView: View {
                     .tint(StrandPalette.accent)
                     .accessibilityLabel("Theme")
                 }
+                rowDivider
+                FormRow(label: "Band graphic") {
+                    Picker("Band graphic", selection: Binding(
+                        get: { BandGraphicStyle.resolve(bandGraphicRaw) },
+                        set: { bandGraphicRaw = $0.rawValue }
+                    )) {
+                        ForEach(BandGraphicStyle.allCases) { style in
+                            Text(style.label).tag(style)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .tint(StrandPalette.accent)
+                    .accessibilityLabel("Band graphic")
+                    .accessibilityIdentifier("settings.bandGraphicStyle")
+                }
+                Text("Choose the battery image shown on Today.")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, NoopMetrics.space1)
                 rowDivider   // #79: the segmented rows sat flush against each other (missing separator)
                 FormRow(label: "Chart colours") {
                     // Default = NOOP's clean metric ramps; Classic = the throwback red→amber→green
