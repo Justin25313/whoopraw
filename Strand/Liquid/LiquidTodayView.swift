@@ -163,10 +163,11 @@ struct LiquidTodayView: View {
     /// launch data-churn (refresh publish + BLE/HR notifies) isn't fighting 4 live canvases + CoreMotion.
     @State private var dataLoaded = false
 
-    // Pull-to-sync: a neutral ring fills with the top overscroll distance, then releases into a refresh.
+    // iOS owns refresh recognition and its progress ring; macOS retains the offset-driven indicator.
     @State private var pullY: CGFloat = 0
     @State private var refreshArmed = false
     @State private var refreshing = false
+    @State private var pullSyncFeedback: String?
     @State private var pullHaptic = 0
     private let pullThreshold: CGFloat = 80
 
@@ -336,6 +337,7 @@ struct LiquidTodayView: View {
             VStack(spacing: 0) {
                 // Zero-height scroll-to-top anchor (#198 follow-up): the target for an at-root Today re-tap.
                 Color.clear.frame(height: 0).id(Self.topAnchorID)
+                #if !os(iOS)
                 // Scroll-offset probe at the very top (before padding), so its minY in the scroll's
                 // coordinate space reads the top OVERSCROLL: ~0 at rest, positive as you pull down.
                 GeometryReader { g in
@@ -345,6 +347,7 @@ struct LiquidTodayView: View {
                 .frame(height: 0)
 
                 liquidRefreshIndicator   // the ring fills in the space revealed by the pull
+                #endif
 
                 VStack(alignment: .leading, spacing: NoopMetrics.space3) {
                     scene
@@ -434,8 +437,24 @@ struct LiquidTodayView: View {
         // brings Today's scroll behaviour in line with the rest of the app without touching the
         // vertical pull-to-refresh gesture above.
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-        #endif
+        // Let iOS recognize the release and own its progress ring, including on short dashboards.
+        .scrollBounceBehavior(.always, axes: .vertical)
+        .refreshable { await refreshFromPull() }
+        #else
         .onPreferenceChange(PullOffsetKey.self) { handlePull($0) }
+        #endif
+        .overlay(alignment: .top) {
+            if let feedback = pullSyncFeedback {
+                Text(verbatim: feedback)
+                    .font(StrandFont.caption)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                    .padding(NoopMetrics.space2)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.top, NoopMetrics.space2)
+                    .accessibilityIdentifier("today.pullSyncFeedback")
+                    .allowsHitTesting(false)
+            }
+        }
         // The sky is a FIXED full-bleed backdrop drawn behind the scroll content, edge-to-edge under the
         // status bar. A ScrollView background does not scroll with the content, so pulling down never
         // moves the sky (the exact behaviour the scaffold uses on the classic Today).
@@ -474,7 +493,7 @@ struct LiquidTodayView: View {
         // A light tick when the day changes (swipe or calendar pick) — the WHOOP-style day nav should
         // feel physical ("every tiny little thing").
         .liquidSelectionHaptic(trigger: selectedDayOffset)
-        // One subtle tick when the pull is armed, never for an unavailable or already-running sync.
+        // One subtle tick for a deliberate refresh (native iOS action or armed macOS pull).
         .liquidTapHaptic(trigger: pullHaptic)
         // hydrationSeq joins the id so logging a drink re-reads the card immediately, the same trigger set
         // classic TodayView's reloadHydration() uses.
@@ -530,6 +549,41 @@ struct LiquidTodayView: View {
 
     // MARK: - Liquid pull-to-refresh
 
+    /// iOS calls this from its native refresh action, independently of offset-preference delivery or
+    /// the rubber-band animation returning to zero. The custom macOS indicator shares the same action.
+    @MainActor private func refreshFromPull() async {
+        guard !refreshing else { return }
+        refreshing = true
+        refreshArmed = false
+        #if os(iOS)
+        pullHaptic &+= 1
+        #endif
+        let request = TodayPullSyncRequest.resolve(connected: ble.state.connected,
+                                                  bonded: ble.state.bonded,
+                                                  historyReady: ble.state.historyReady,
+                                                  backfilling: ble.state.backfilling)
+        ble.state.append(log: "Today: pull-to-sync requested; action=\(request)")
+        request.perform(start: { ble.syncNow() }, queueUntilPaired: { ble.armPendingManualSync() })
+        switch request {
+        case .offline:
+            pullSyncFeedback = String(localized: "No strap connected")
+        case .waitingForPairing:
+            pullSyncFeedback = String(localized: "Pairing…")
+        case .alreadyRunning:
+            pullSyncFeedback = String(localized: "A sync is already in progress.")
+        case .start:
+            pullSyncFeedback = ble.state.backfilling
+                ? String(localized: "Syncing…")
+                : (ble.state.lastSyncError ?? String(localized: "Ready to sync"))
+        }
+        await repo.refresh()
+        await load()
+        // Keep the outcome readable; this also gives the native refresh control a visible completion.
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        pullSyncFeedback = nil
+        withAnimation(.easeOut(duration: 0.25)) { refreshing = false }
+    }
+
     static let pullSpace = "liqTodayScroll"
 
     /// Shows gesture progress without observing the live heart-rate stream in the dashboard shell.
@@ -561,19 +615,7 @@ struct LiquidTodayView: View {
         }
         if refreshArmed, pullY < 6 {
             refreshArmed = false
-            refreshing = true
-            Task {
-                // #334 (iOS twin of Android #426): a pull requests a fresh strap history offload, not just
-                // a UI reload. syncNow() is internally gated (connected + bonded + not-already-backfilling),
-                // so a pull while disconnected or mid-offload safely no-ops. The sync status chip owns the
-                // ongoing offload progress; the pull spinner stays short (the reload below).
-                // An automatic sync may have started after the gesture was armed. Reuse it instead.
-                if ble.state.historyReady, !ble.state.backfilling { ble.syncNow() }
-                await repo.refresh()
-                await load()
-                try? await Task.sleep(nanoseconds: 350_000_000)   // let the completion settle
-                withAnimation(.easeOut(duration: 0.25)) { refreshing = false }
-            }
+            Task { await refreshFromPull() }
         }
     }
 
