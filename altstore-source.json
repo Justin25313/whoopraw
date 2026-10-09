@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "12.0.5",
+          "buildVersion": "440",
+          "date": "2026-10-09",
+          "localizedDescription": "WhoopRaw 12.0.5. See the release notes for what changed.",
+          "downloadURL": "https://github.com/Justin25313/whoopraw/releases/download/v12.0.5/NOOP-ios-unsigned-v12.0.5.ipa",
+          "size": 29926955,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "12.0.4",
           "buildVersion": "439",
           "date": "2026-10-08",
@@ -71,12 +80,12 @@
         }
       },
       "minOSVersion": "17.0",
-      "version": "12.0.4",
-      "buildVersion": "439",
-      "versionDate": "2026-10-08",
-      "versionDescription": "WhoopRaw 12.0.4. See the release notes for what changed.",
-      "downloadURL": "https://github.com/Justin25313/whoopraw/releases/download/v12.0.4/NOOP-ios-unsigned-v12.0.4.ipa",
-      "size": 24677001
+      "version": "12.0.5",
+      "buildVersion": "440",
+      "versionDate": "2026-10-09",
+      "versionDescription": "WhoopRaw 12.0.5. See the release notes for what changed.",
+      "downloadURL": "https://github.com/Justin25313/whoopraw/releases/download/v12.0.5/NOOP-ios-unsigned-v12.0.5.ipa",
+      "size": 29926955
     }
   ],
   "news": []
