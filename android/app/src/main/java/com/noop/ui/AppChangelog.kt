@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.0.5"
+    const val CURRENT_VERSION = "12.0.6"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.0.6",
+            title = uiString(R.string.l10n_app_changelog_sync_905f6309),
+            date = "October 2026",
+            items = listOf(
+                "**Native iPhone pull-to-sync.** Today now uses the system refresh gesture and progress indicator, including on short dashboards, instead of waiting for a custom scroll-offset signal to return to zero.",
+                "**Visible sync feedback.** A pull explains when the band is offline, still pairing or already syncing. A request during pairing is retained through the existing reconnect handshake, and a running sync is reused.",
+            ),
+        ),
         Release(
             version = "12.0.5",
             title = uiString(R.string.l10n_app_changelog_sync_905f6309),

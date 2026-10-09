@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.0.5"
+    static let currentVersion = "12.0.6"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,15 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.0.6",
+            title: "Sync",
+            date: "October 2026",
+            items: [
+                "**Native iPhone pull-to-sync.** Today now uses the system refresh gesture and progress indicator, including on short dashboards, instead of waiting for a custom scroll-offset signal to return to zero.",
+                "**Visible sync feedback.** A pull explains when the band is offline, still pairing or already syncing. A request during pairing is retained through the existing reconnect handshake, and a running sync is reused.",
+            ]
+        ),
         Release(
             version: "12.0.5",
             title: "Sync",
